@@ -1,0 +1,24 @@
+{
+  "playlists": [
+    {
+      "name": "Morning Motivation",
+      "tracks": ["TOTO - Africa", "a-ha - Take on Me", "Gnarls Barkley - Crazy"]
+    },
+    {
+      "name": "Daily Mix",
+      "tracks": [
+        "The Weeknd - Blinding Lights",
+        "Dua Lipa - Don't Start Now",
+        "Lady Gaga - Rain On Me"
+      ]
+    },
+    {
+      "name": "Evening Chill",
+      "tracks": [
+        "Billie Eilish - everything i wanted",
+        "The Weeknd - In Your Eyes",
+        "Dua Lipa - Break My Heart"
+      ]
+    }
+  ]
+}

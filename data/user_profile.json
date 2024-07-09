@@ -1,0 +1,135 @@
+{
+  "name": "Dan",
+  "age": 31,
+  "gender": "male",
+  "profession": "software engineer",
+  "email": "justdan@gmail.com",
+  "location": {
+    "home": {
+      "city": "London",
+      "country": "United Kingdom",
+      "coordinates": {
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      }
+    },
+    "work": {
+      "city": "London",
+      "country": "United Kingdom",
+      "coordinates": {
+        "latitude": 51.5144,
+        "longitude": -0.0931
+      }
+    }
+  },
+  "previous_notifications": [
+    {
+      "date": "2024-05-13",
+      "time": "10:00",
+      "message": "Reminder: review the project plan for the meeting at 11 AM."
+    },
+    {
+      "date": "2024-05-14",
+      "time": "08:30",
+      "message": "Hey Dan, don't forget our meeting at 9 AM tomorrow!"
+    },
+    {
+      "date": "2024-05-14",
+      "time": "18:00",
+      "message": "Time for your afternoon run! Don't forget to log your workout."
+    },
+    {
+      "date": "2024-05-15",
+      "time": "10:15",
+      "message": "Dan, can you please review the latest code changes by 4 PM?"
+    },
+    {
+      "date": "2024-05-15",
+      "time": "12:00",
+      "message": "Lunch at 1 PM?"
+    },
+    {
+      "date": "2024-05-15",
+      "time": "17:00",
+      "message": "Your running shoes are ready to collect at the store near work."
+    }
+  ],
+  "app_usage": {
+    "most_used_apps": [
+      {
+        "name": "Twitter",
+        "usage_time": "2h 30m"
+      },
+      {
+        "name": "Strava",
+        "usage_time": "1h 15m"
+      },
+      {
+        "name": "Spotify",
+        "usage_time": "3h 40m"
+      },
+      {
+        "name": "Netflix",
+        "usage_time": "4h 20m"
+      },
+      {
+        "name": "Slack",
+        "usage_time": "5h"
+      }
+    ],
+    "last_opened_app": "Slack",
+    "screen_time": "10h 15m"
+  },
+  "contacts": [
+    {
+      "name": "Alex Johnson",
+      "phone": "+44 7894 123456",
+      "email": "alex.johnson@gmail.com"
+    },
+    {
+      "name": "Emma Watson",
+      "phone": "+44 7875 234567",
+      "email": "emma.watson@gmail.com"
+    },
+    {
+      "name": "Lucy Roberts",
+      "phone": "+44 7833 456789",
+      "email": "lucy.roberts@gmail.com"
+    }
+  ],
+  "purchases": [
+    {
+      "item": "Running Shoes",
+      "date": "2024-05-10",
+      "price": "£120",
+      "store": "Sports Direct"
+    },
+    {
+      "item": "Noise Cancelling Headphones",
+      "date": "2024-05-12",
+      "price": "£250",
+      "store": "Amazon"
+    },
+    {
+      "item": "Ergonomic Keyboard",
+      "date": "2024-05-14",
+      "price": "£150",
+      "store": "Currys"
+    }
+  ],
+  "fitness_data": {
+    "steps_today": 8500,
+    "average_daily_steps": 9000,
+    "last_workout": {
+      "type": "Running",
+      "distance_km": 5,
+      "duration_minutes": 30
+    },
+    "sleep": {
+      "last_night": "7h 45m",
+      "average": "7h 30m"
+    },
+    "weekly_distance_km": 25,
+    "calories_burned_today": 1200
+  }
+}

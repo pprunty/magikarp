@@ -1,0 +1,25 @@
+Dan is an avid tech enthusiast. He grew up in the 90s reading science fiction novels
+and geeking out on technology, picturing a world where by 2025, we’d have flying cars, 
+AI companions, smart cities, and seamless human-machine integrations.
+
+Instead, he finds himself in a world where smart devices struggle to understand basic commands, 
+phones are bombarded with endless notifications, and spam emails flood his inbox. 
+Instead of a sleek, efficient future, he’s surrounded by glitchy gadgets and constant digital noise.
+
+One day, on his way home from work, he hears about a technology company called EVERYTHING 
+that claims to have finally realized the futuristic vision he’d always dreamed of. 
+They boast about having developed advanced AI that truly understands human needs, 
+featuring autonomous agents that can **proactively** take actions on their own. 
+By tapping into devices data, these agents can act on users behalf, surface timely and accurate recommendations, 
+and even curate personalized entertainment experiences in a timely, non-intrusive way.
+Dan is captivated by the idea of living in a world where technology not only responds to commands but also 
+foresees his needs and acts **independently** to improve his daily life. 
+
+Intrigued and skeptical, he decides to learn more, hoping that EVERYTHING might finally 
+deliver on the promise of a seamless, intelligent future.
+
+Requirements:
+ - Please produce production-quality Python code, providing comments where necessary
+ - Provide a brief README with instructions on how to run the program and insights on any assumptions made
+ - Upload the code on a private Github repo and share it with @behlock and @mladenhoyss
+ - Please do not spend more than 4-6 hours on this
