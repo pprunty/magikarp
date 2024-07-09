@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 from pydantic import BaseModel, Field
 from datetime import date
 
@@ -21,15 +21,10 @@ class PromptRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     """Simple pydantic model to store prompt to LLM"""
-    prompt: str = Field(..., example="How many steps do I have left to do today to meet my step goal?")
-
-
-class AddRuleRequest(BaseModel):
-    """Model to represent a new rule to be added."""
-    rule_description: str
+    prompt: str = Field(..., example="Hello there.")
 
 
 class DateRequest(BaseModel):
     """Model to represent the date for which notifications are requested."""
     request_date: date = Field(..., example="2024-05-15")
-    rules: List[RuleSetEnum] = Field(..., example=[rule.value for rule in RuleSetEnum], exclude=True)
+    rules: List[Union[str, RuleSetEnum]] = Field(..., example=[rule.value for rule in RuleSetEnum])

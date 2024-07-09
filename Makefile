@@ -36,8 +36,8 @@ model-delete:
 
 # Docker commands
 docker-build:
-	docker pull ollama/ollama && docker build -f $(DOCKERFILE) -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+	docker pull ollama/ollama && docker build -f $(DOCKERFILE) -t $(DOCKER_IMAGE):$(DOCKER_TAG) .  --progress=plain
 
 docker-run:
-	docker run -d -p $(PORT):$(PORT) $(DOCKER_IMAGE):$(DOCKER_TAG)
+	docker run -d  $(DOCKER_IMAGE):$(DOCKER_TAG)
 

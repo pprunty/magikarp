@@ -1,12 +1,13 @@
+import json
 from fastapi import Depends, APIRouter, HTTPException, status
 from magikarp.services.model import TransformerModel
 from magikarp.dependencies import get_transformer_service
-from magikarp.models.responses import ChatResponse
-from magikarp.models.requests import DateRequest, AddRuleRequest
+from magikarp.models.responses import NotificationResponse
+from magikarp.models.requests import DateRequest
 
 notification_router = APIRouter(prefix="/notification", tags=["notification"])
 
-@notification_router.post("/get", response_model=ChatResponse, status_code=status.HTTP_200_OK)
+@notification_router.post("/get", response_model=NotificationResponse, status_code=status.HTTP_200_OK)
 async def get_push_notifications_for_the_day(
         request: DateRequest,
         transformer_service: TransformerModel = Depends(get_transformer_service)
@@ -18,31 +19,22 @@ async def get_push_notifications_for_the_day(
         transformer_service (TransformerModel): The transformer service dependency.
 
     Returns:
-        dict: The model's response containing push notifications.
+        NotificationResponse: The model's response containing push notifications.
     """
     try:
         response = transformer_service.get_push_notifications(request.request_date, request.rules)
-        return {"response": response}
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
-@notification_router.post("/add_rule", status_code=status.HTTP_201_CREATED)
-async def add_new_rule(
-        request: AddRuleRequest,
-        transformer_service: TransformerModel = Depends(get_transformer_service)
-):
-    """API endpoint to add a new rule to the rule set.
-
-    Args:
-        request (AddRuleRequest): The request body containing the new rule description.
-        transformer_service (TransformerModel): The transformer service dependency.
-
-    Returns:
-        dict: A confirmation message.
-    """
-    try:
-        transformer_service.add_rule(request.rule_description)
-        return {"message": "New rule added successfully"}
+        print(f"response_dict = {response}")
+        # Assuming the response contains JSON string after the initial message
+        try:
+            # Find the start and end of the JSON part
+            start_index = response.index("{")
+            end_index = response.index("}") + 1
+            json_str = response[start_index:end_index]
+            print(f"json_str = {json_str}")
+            response_dict = json.loads(json_str)
+            return NotificationResponse(notifications=response_dict)
+        except (ValueError, json.JSONDecodeError) as e:
+            # If there's an error parsing the JSON, return the raw response
+            return NotificationResponse(notifications=response)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

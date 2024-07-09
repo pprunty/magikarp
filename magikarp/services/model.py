@@ -16,7 +16,6 @@ class TransformerModel:
 
     def __init__(self):
         """Initializes the TransformerModel with user data."""
-        logger.info("CREATING MODEL CLASS")
         self.chat_messages = []
         self.user_data_service = DataService()  # The user would be fetched via an ID in real-life scenario
         self.formatted_user_data = self.user_data_service.get_formatted_data()
@@ -74,7 +73,7 @@ class TransformerModel:
             logger.error(f"Error generating suggested prompts: {e}")
             raise ValueError("Failed to parse suggested prompts from the response")
 
-    def get_push_notifications(self, date: date, rules: List[RuleSetEnum]) -> str:
+    def get_push_notifications(self, date: date, rules: List[str]) -> str:
         """Asks the model for simulated push notifications for a given date based on user defined
         rule set.
 
@@ -85,7 +84,7 @@ class TransformerModel:
         Returns:
             str: The model's response.
         """
-        rules_str = "\n".join([rule.value for rule in rules])
+        rules_str = "\n".join([rule for rule in rules])
         prompt = (
             f"For the given date {date} and these user defined rules stored as preferences on the user's device:\n"
             f"{rules_str}\n\n"

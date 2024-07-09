@@ -9,10 +9,10 @@ from magikarp.models.requests import ChatRequest
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('uvicorn.debug')
 
-chat_router = APIRouter(prefix="/conversation", tags=["conversation"])
+chat_router = APIRouter(prefix="/chat", tags=["chat"])
 
 @chat_router.post("", response_model=ChatResponse, status_code=status.HTTP_200_OK)
-async def chat(
+async def chat_with_ai_on_device(
         request: ChatRequest,
         transformer_service: TransformerModel = Depends(get_transformer_service)
 ):
