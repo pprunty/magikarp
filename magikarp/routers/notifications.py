@@ -7,6 +7,7 @@ from magikarp.models.requests import DateRequest
 
 notification_router = APIRouter(prefix="/notification", tags=["notification"])
 
+
 @notification_router.post("/get", response_model=NotificationResponse, status_code=status.HTTP_200_OK)
 async def get_push_notifications_for_the_day(
         request: DateRequest,
@@ -23,18 +24,25 @@ async def get_push_notifications_for_the_day(
     """
     try:
         response = transformer_service.get_push_notifications(request.request_date, request.rules)
-        print(f"response_dict = {response}")
+        print(f"response = {response}")
+
         # Assuming the response contains JSON string after the initial message
         try:
-            # Find the start and end of the JSON part
+            # Find the start of the JSON part
             start_index = response.index("{")
-            end_index = response.index("}") + 1
-            json_str = response[start_index:end_index]
+            json_str = response[start_index:]
+
+            # Ensure the JSON string ends with a closing brace
+            if not json_str.endswith("}"):
+                json_str += "}"
+
             print(f"json_str = {json_str}")
             response_dict = json.loads(json_str)
+            print(f"response dict = {response_dict}")
             return NotificationResponse(notifications=response_dict)
         except (ValueError, json.JSONDecodeError) as e:
-            # If there's an error parsing the JSON, return the raw response
+            print(f"JSON parsing error: {e}")
+            # If there's an error parsing the JSON, return the raw response as a string
             return NotificationResponse(notifications=response)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

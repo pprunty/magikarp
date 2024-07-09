@@ -1,17 +1,12 @@
 # EVERYTHING Autonomous Agent (Magikarp)
 
-![shiny_Magikarp.png](shiny_magikarp.png)
+![shiny_Magikarp.png](images/shiny_magikarp.png)
 
 ## Description
 
 The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI application that leverages (just) Dan's
 data to deliver timely and accurate recommendations, simulate push notifications for a given date, and provide a chat
 companion using AI and Large Language Models (LLMs).
-
-Please watch the demo video here, since setup can take some time I want to show you it will be worth your time 
-ahead of doing so.
-
-![Demo Video](./demo.mp4)
 
 
 ## How It Works / Key Features
@@ -62,15 +57,17 @@ _Note: `ollama`'s Llama3 model uses ~ 4GB of Docker disk space and can take up t
 The model will be persisted in the volume mount in the `ollama` directory at the project root, so this will go quickly
 with subsequent starts._
 
-** IMPORTANT: Before triggering any of the APIs, you need to wait for the ollama image to finish installing and initializzing 
-the magikarp LLM, this takes place in the [entrypoint.sh](./entrypoint.sh)/
+** IMPORTANT: Before triggering any of the APIs, you need to wait for the `ollama` image to finish installing and initializzing 
+the magikarp LLM, this takes place in the [entrypoint.sh](./entrypoint.sh).
 
 The FastAPI webserver has two endpoints:
 
 1. **Swagger endpoint:** The Swagger documentation is available
    at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). This endpoint allows you to test out the APIs.
+   ![swagger.png](images/swagger.png)
 2. **Redoc endpoint (extra):** The Redoc documentation is a more stylish version of the Swagger documentation which does
    not allow for manual triggering of the APIs.
+   ![redoc.png](images/redoc.png)
 
 _Note: Running using docker-compose will mean responses are super slow from the APIs. This is because when you run
 Ollama as a native Mac application on M1 (or newer) hardware, its runs the LLM on the GPU.
@@ -111,9 +108,14 @@ The application provides the following APIs:
 
 - `/chat`: Allows Dan to interact in a continuous conversation with Magikarp.
 
+Example request and response:
+
+
 ### Notifications API
 
 - `/notifications`: Sends simulated push-notifications to Dan based on predefined rules and his user data.
+
+Example request and response:
 
 ### Recommendation API
 
@@ -121,3 +123,6 @@ The application provides the following APIs:
   suggestions are based off Dan's data.
 - `/recommendations/suggest`: Generates a list of new prompt suggestions for Dan to use to prompt Magikarp. This API
   ensures Dan's suggested prompts for Magikarp are updated throughout the day based on the time of day and his schedule.
+
+Example request and response:
+
