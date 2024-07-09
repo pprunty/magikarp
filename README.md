@@ -14,17 +14,17 @@ companion using AI and Large Language Models (LLMs).
 ## How It Works / Key Features
 
 - **AI and LLM Integration**: Utilizes Meta's Llama 3 model through [`ollama`](https://ollama.com/).
+- **Modelfile Configuration**: Uses a [`Modelfile`](./Modelfile) to create a pre-defined configuration for the Magikarp
+  model based on the [instructions](./instructions.txt).
+- **Seamless Integration**: Runs a separate `ollama` server alongside the Python FastAPI webserver, enabling APIs for
+  recommendations, notifications, and general AI prompting using Dan's contextual data.
+- **User Data Management**: User data is typically stored locally on the user's device, with a short look-back period (
+  e.g., 7 days). This data is ingested by the web server at runtime and used to formulate prompts to `ollama`.
 - **Chat Companion API**: Provides interactive chat functionality using the Magikarp model, which is based off Llama 3,
   and has contextual knowledge of Dan's data.
 - **Personalized Recommendation API**: Delivers Dan prompt suggestions based on Dan's activities and preferences which
   Dan can select to interact with Magikarp.
 - **Notification Simulation API**: Provides simulated push mobile notifications for Dan based on a provided date.
-- **Seamless Integration**: Runs a separate `ollama` server alongside the Python FastAPI webserver, enabling APIs for
-  recommendations, notifications, and general AI prompting using Dan's data.
-- **Modelfile Configuration**: Uses a [`Modelfile`](./Modelfile) to create a pre-defined configuration for the Magikarp
-  model based on the [instructions](./instructions.txt).
-- **User Data Management**: User data is typically stored locally on the user's device, with a short look-back period (
-  e.g., 7 days). This data is ingested by the web server at runtime and used to formulate prompts to `ollama`.
 
 ## Pre-requisites
 
@@ -59,7 +59,7 @@ _Note: `ollama`'s Llama3 model uses ~ 4GB of Docker disk space and can take up t
 The model will be persisted in the volume mount in the `ollama` directory at the project root, so this will go quickly
 with subsequent starts._
 
-** IMPORTANT: Before triggering any of the APIs, you need to wait for the `ollama` image to finish installing and initializzing 
+** IMPORTANT: Before triggering any of the APIs, you need to wait for the `ollama` image to finish installing and initializing 
 the magikarp LLM, this takes place in the [entrypoint.sh](./entrypoint.sh).
 
 The FastAPI webserver has two endpoints:
