@@ -1,6 +1,6 @@
 # EVERYTHING Autonomous Agent (Magikarp)
 
-![shiny_Magikarp.png](shiny_Magikarp.png)
+![shiny_Magikarp.png](shiny_magikarp.png)
 
 ## Description
 
