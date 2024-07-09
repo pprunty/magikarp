@@ -8,8 +8,8 @@ The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI app
 data to deliver timely and accurate recommendations, simulate push notifications for a given date, and provide a chat
 companion using AI and Large Language Models (LLMs).
 
-⚠️ The setup for this project can take some time (~30 mins), so you know it is worth your time I created a quick video demo
-which you can watch [here](https://drive.google.com/file/d/1AjILMCiRm8YwZPQLncvkX8y0AuZF2MpE/view?usp=sharing). Please watch the demo before getting started.
+⚠️ **The setup for this project can take some time (~30 mins), so you know it is worth your time I created a quick video demo
+which you can watch [here](https://drive.google.com/file/d/1AjILMCiRm8YwZPQLncvkX8y0AuZF2MpE/view?usp=sharing). Please watch the demo before getting started.**
 
 ## How It Works / Key Features
 
