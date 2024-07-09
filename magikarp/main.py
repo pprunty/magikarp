@@ -1,20 +1,42 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from magikarp.routers import chat_router
+from magikarp.routers import recommendation_router
+from magikarp.routers import notification_router
 
-from magikarp.routers.chat import chat_router
-from magikarp.routers.recommendations import recommendation_router
-from magikarp.routers.notifications import notification_router
+# Create FastAPI instance
+app = FastAPI(
+    title="Magikarp API",
+    description="APIs for Magikarp service.",
+    version="1.0.0"
+)
 
-app = FastAPI()
+# CORS (Cross-Origin Resource Sharing) Middleware
+# Adjust origins as per your deployment needs
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
-# Router for dynamic pre-defined prompt recommendations
+# Include routers
 app.include_router(recommendation_router)
-# Router for companion chats / general LLM usage
 app.include_router(chat_router)
-# Router for simulating notifications over the course of the day (2024-05-15)
 app.include_router(notification_router)
 
 
+# Root endpoint
 @app.get("/")
 async def read_root():
+    """
+    Root endpoint of the API.
+
+    Returns:
+        dict: A welcome message with instructions to access the documentation.
+    """
     return {
-        "Hello": "it's me, Magikarp! Please add '/docs' to the URL in your browser to view and manually trigger my APIs."}
+        "message": "Hello! Welcome to the Magikarp API.",
+        "instructions": "Add '/docs' to the URL in your browser to view and manually trigger the APIs."
+    }

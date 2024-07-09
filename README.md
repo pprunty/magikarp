@@ -1,6 +1,6 @@
 # EVERYTHING Autonomous Agent (magikarp)
 
-![shiny_magikarp.webp](shiny_magikarp.webp)
+![assets/shiny_magikarp.webp](assets/shiny_magikarp.webp)
 
 ## Description
 

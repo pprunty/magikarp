@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "magikarp"
 version = "0.1.0"
-description = "Nothing: Software Developer take-home test"
+description = "Nothing: Software developer take-home test"
 authors = ["pprunty <pprunty@tcd.ie>"]
 license = "MIT"
 readme = "README.md"
