@@ -8,7 +8,7 @@ DOCKER_IMAGE := $(SERVICE_NAME)
 DOCKER_TAG := latest
 PORT := 80
 
-.PHONY: install update lock docker-build docker-run
+.PHONY: install update lock docker-compose
 
 # Poetry commands
 install:
@@ -35,9 +35,5 @@ model-delete:
 	ollama rm $(MODEL_NAME)
 
 # Docker commands
-docker-build:
-	docker pull ollama/ollama && docker build -f $(DOCKERFILE) -t $(DOCKER_IMAGE):$(DOCKER_TAG) .  --progress=plain
-
-docker-run:
-	docker run -d  $(DOCKER_IMAGE):$(DOCKER_TAG)
-
+docker-compose:
+	docker-compose up --build

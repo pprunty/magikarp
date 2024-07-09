@@ -1,0 +1,45 @@
+# Use an official Python runtime as a base image
+FROM python:3.12-slim as base
+
+# Set environment variables to reduce Python bytecode generation and ensure stdout and stderr are unbuffered
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Define the working directory within the container
+WORKDIR /app
+
+# Install system dependencies required for PostgreSQL and other potential dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install poetry for Python package management
+RUN pip install --no-cache-dir poetry
+
+# Copy only the files needed for poetry to install dependencies
+COPY poetry.lock pyproject.toml /app/
+
+# Disable creation of virtual environments and install dependencies
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-dev --no-interaction --no-ansi
+
+# Copy the rest of the application
+COPY data /app/data
+COPY magikarp /app/magikarp
+
+# Use a multi-stage build to minimize the size of the final image
+FROM python:3.12-slim as production
+
+# Copy installed dependencies from the base stage
+COPY --from=base /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=base /usr/local/bin /usr/local/bin
+
+# Copy the application code and startup script to the production image
+WORKDIR /app
+COPY --from=base /app /app
+
+# Expose port 80 for the application
+EXPOSE 80
+
+# Update the CMD to use uvicorn for running the application
+CMD ["fastapi", "run", "magikarp/main.py", "--host", "0.0.0.0", "--port", "80"]

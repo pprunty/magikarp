@@ -44,7 +44,7 @@ async def ask_predefined_suggested_prompt(
         logger.error(f"Error generating suggestions: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error generating suggestions")
 
-@recommendation_router.post("/suggest", response_model=RecommendationResponse, status_code=status.HTTP_200_OK)
+@recommendation_router.post("/suggest", status_code=status.HTTP_200_OK)
 async def generate_suggested_prompts(
         transformer_service: TransformerModel = Depends(get_transformer_service)
 ):
