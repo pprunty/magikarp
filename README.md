@@ -8,6 +8,9 @@ The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI app
 data to deliver timely and accurate recommendations, simulate push notifications for a given date, and provide a chat
 companion using AI and Large Language Models (LLMs).
 
+⚠️ The setup for this project can take some time (~30 mins), so you know it is worth your time I created a quick video demo
+which you can watch [here](https://drive.google.com/file/d/1AjILMCiRm8YwZPQLncvkX8y0AuZF2MpE/view?usp=sharing). Please watch the demo before getting started.
+
 ## How It Works / Key Features
 
 - **AI and LLM Integration**: Utilizes Meta's Llama 3 model through [`ollama`](https://ollama.com/).
@@ -37,7 +40,7 @@ Example of Magikarp chat API:
 - docker-compose
 
 _Note: If you wish to download `ollama`, you can follow the instructions [here](https://ollama.com/). However, it is
-easier to run the application through Docker by following the instructions in the next section (although this will mean 
+easier to run the application through Docker by following the instructions in the next section (although this will mean
 much slower responses from the LLM)._
 
 ## Quickstart
@@ -61,7 +64,7 @@ _Note: `ollama`'s Llama3 model uses ~ 4GB of Docker disk space and can take up t
 The model will be persisted in the volume mount in the `ollama` directory at the project root, so this will go quickly
 with subsequent starts._
 
-** IMPORTANT: Before triggering any of the APIs, you need to wait for the `ollama` image to finish installing and initializzing 
+** IMPORTANT: Before triggering any of the APIs, you need to wait for the `ollama` image to finish installing and initializzing
 the magikarp LLM, this takes place in the [entrypoint.sh](./entrypoint.sh).
 
 The FastAPI webserver has two endpoints:
