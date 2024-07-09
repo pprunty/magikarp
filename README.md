@@ -70,10 +70,10 @@ the magikarp LLM, this takes place in the [entrypoint.sh](./entrypoint.sh).
 The FastAPI webserver has two endpoints:
 
 1. **Swagger endpoint:** The Swagger documentation is available
-   at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). This endpoint allows you to test out the APIs.
+   at [http://localhost:8000/docs](http://127.0.0.1:8000/docs). This endpoint allows you to test out the APIs.
    ![swagger.png](images/swagger.png)
 2. **Redoc endpoint (extra):** The Redoc documentation is a more stylish version of the Swagger documentation which does
-   not allow for manual triggering of the APIs.
+   not allow for manual triggering of the APIs. It is available at [http://localhost:8000/redoc](http://localhost:8000/redoc).
    ![redoc.png](images/redoc.png)
 
 _Note: Running using docker-compose will mean responses are super slow from the APIs. This is because when you run
@@ -105,7 +105,7 @@ make run
 ```
 
 This will run the FastAPI web server with reload available, allowing you to update the code and see your changes in
-real-time.
+real-time. The api endpoint urls are the same as for the docker setup.
 
 ## APIs
 
