@@ -8,9 +8,6 @@ The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI app
 data to deliver timely and accurate recommendations, simulate push notifications for a given date, and provide a chat
 companion using AI and Large Language Models (LLMs).
 
-![ezgif-6-0567460a35](https://github.com/pprunty/magikarp/assets/58374462/e9fe4c56-ee18-455b-9ff1-e4bad8cdef94)
-
-
 ## How It Works / Key Features
 
 - **AI and LLM Integration**: Utilizes Meta's Llama 3 model through [`ollama`](https://ollama.com/).
@@ -18,19 +15,18 @@ companion using AI and Large Language Models (LLMs).
   model based on the [instructions](./instructions.txt).
 - **Seamless Integration**: Runs a separate `ollama` server alongside the Python FastAPI webserver, enabling APIs for
   recommendations, notifications, and general AI prompting using Dan's contextual data.
-- **User Data Management**: User data is typically stored locally on the user's device, with a short look-back period (
-  e.g., 7 days). This data is ingested by the web server at runtime and used to formulate prompts to `ollama`.
+- **User Data Management**: User data would typically be stored locally on the user's device, with a short look-back period (
+  e.g., 7 days). Dan's data is ingested by the web server at runtime and used to formulate prompts to `ollama`.
 - **Chat Companion API**: Provides interactive chat functionality using the Magikarp model, which is based off Llama 3,
   and has contextual knowledge of Dan's data.
 - **Personalized Recommendation API**: Delivers Dan prompt suggestions based on Dan's activities and preferences which
   Dan can select to interact with Magikarp.
 - **Notification Simulation API**: Provides simulated push mobile notifications for Dan based on a provided date.
-- **Seamless Integration**: Runs a separate `ollama` server alongside the Python FastAPI webserver, enabling APIs for
-  recommendations, notifications, and general AI prompting using Dan's data.
-- **Modelfile Configuration**: Uses a [`Modelfile`](./Modelfile) to create a pre-defined configuration for the Magikarp
-  model based on the [instructions](./instructions.txt).
-- **User Data Management**: User data is typically stored locally on the user's device, with a short look-back period (
-  e.g., 7 days). This data is ingested by the web server at runtime and used to formulate prompts to `ollama`.
+
+Example of Magikarp chat API:
+
+![ezgif-6-0567460a35](https://github.com/pprunty/magikarp/assets/58374462/e9fe4c56-ee18-455b-9ff1-e4bad8cdef94)
+
 
 ## Pre-requisites
 
@@ -116,14 +112,10 @@ The application provides the following APIs:
 
 - `/chat`: Allows Dan to interact in a continuous conversation with Magikarp.
 
-Example request and response:
-
 
 ### Notifications API
 
 - `/notifications`: Sends simulated push-notifications to Dan based on predefined rules and his user data.
-
-Example request and response:
 
 ### Recommendation API
 
@@ -131,6 +123,4 @@ Example request and response:
   suggestions are based off Dan's data.
 - `/recommendations/suggest`: Generates a list of new prompt suggestions for Dan to use to prompt Magikarp. This API
   ensures Dan's suggested prompts for Magikarp are updated throughout the day based on the time of day and his schedule.
-
-Example request and response:
 
