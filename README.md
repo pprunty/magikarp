@@ -4,14 +4,14 @@
 
 ## Description
 
-The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI application that leverages (just) Dan's
-data to deliver timely and accurate recommendations, simulate push notifications for a given date, and provide a chat
-companion using AI and Large Language Models (LLMs).
+The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI application designed to utilize Dan's data
+to provide timely and accurate recommendations. It can simulate push notifications for specific dates and offers a chat
+companion powered by AI and Large Language Models (LLMs).
 
-⚠️ **The setup for this project can take some time (~30 mins), so you know it is worth your time I created a quick video
-demo
-which you can watch [here](https://drive.google.com/file/d/1AjILMCiRm8YwZPQLncvkX8y0AuZF2MpE/view?usp=sharing). Please
-watch the demo before getting started.**
+⚠️ **Please note that the setup for this project may take around 30 minutes. To ensure it’s worth your time, I have
+created a brief video demo, which you can
+watch [here](https://drive.google.com/file/d/1AjILMCiRm8YwZPQLncvkX8y0AuZF2MpE/view?usp=sharing). It is highly
+recommended to watch the demo before starting.**
 
 ## How It Works / Key Features
 
@@ -122,7 +122,8 @@ The application provides the following APIs:
 
 ### Notifications API
 
-- `/notifications`: Sends simulated push-notifications to Dan based on predefined rules and his user data.
+- `/notifications`: Sends simulated push-notifications to Dan based on predefined rules and his user data. You can add
+  new rules to sample how the push-notifications are updated.
 
 ### Recommendation API
 
@@ -151,7 +152,9 @@ The application provides the following APIs:
    Additionally,
    configuring better GPU usage configuration would be ideal. In real-life scenario the hardware's GPU could be
    leveraged.
-4. **Push-notification rules:** In [this part of the code](https://github.com/pprunty/magikarp/blob/main/magikarp/enums/rules.py#L5), I outline some default rules for how to prompt Dan his
+4. **Push-notification rules:**
+   In [this part of the code](https://github.com/pprunty/magikarp/blob/main/magikarp/enums/rules.py#L5), I outline some
+   default rules for how to prompt Dan his
    push-notifications,
    with additional capabilities for adding new rules. This could be improved to _learn_ some rules for Dan, based on his
    contextual data and behaviour. Additionally, rules could be put into buckets. In the demo, I add a rule asking "
