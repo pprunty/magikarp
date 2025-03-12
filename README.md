@@ -49,6 +49,12 @@ much slower responses from the LLM)._
 
 The easiest way to run this application is via docker compose.
 
+### ollama
+
+brew install ollama
+ollama serve
+(in new termina) ollama pull deepseek-r1
+
 ### Docker
 
 To run the application, make sure you have your Docker daemon running (docker hub desktop app opened) and run the

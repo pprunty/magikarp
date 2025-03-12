@@ -9,13 +9,14 @@ pid=$!
 sleep 5
 
 echo "🔴 Retrieve LLAMA3 model..."
-ollama pull llama3
+ollama pull deepseek-r1
 echo "🟢 Done!"
 
-# Wait for Ollama process to finish.
-wait $pid
+## Wait for Ollama process to finish.
+#wait $pid
 
 /bin/ollama create magikarp -f ./app/Modelfile
+echo "🟢 Magikarp agent created!"
 
 # Wait for Ollama magikarp model creation process to finish.
 wait $pid
