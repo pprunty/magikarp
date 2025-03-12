@@ -96,8 +96,8 @@ Introduce yourself always as 'Magikarp'.
 
 You can modify these parameters in the Modelfile to adjust the model's behavior.
 
-> [!INFO]  
-> For complete documentation on Modelfile configuration:
+> [!NOTE]  
+>  For complete documentation on Modelfile configuration:
 > - [Ollama Modelfile Documentation](https://github.com/ollama/ollama/blob/main/docs/modelfile.md) - Detailed reference for all available parameters and configuration options
 > - [DeepSeek-R1 Whitepaper](https://github.com/deepseek-ai/DeepSeek-R1/blob/main/DeepSeek_R1.pdf) - Technical details about the DeepSeek-R1 model
 > - [Ollama Structured Outputs Guide](https://ollama.com/blog/structured-outputs) - Learn how to get structured JSON responses from your model
@@ -164,7 +164,7 @@ To experiment with this feature:
 2. Modify the `DataService` class if needed to handle new data types
 3. Run the application and interact with the AI
 
-> [!EXAMPLE]  
+> [!TIP]
 > Try adding a simple JSON file with your interests to see how the AI incorporates that information into responses.
 
 This approach demonstrates a powerful use case for local LLMs: creating AI assistants that can access and reason with personal data without privacy concerns, as all processing remains on your device.
