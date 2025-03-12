@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from magikarp.routers import chat_router
-from magikarp.routers import recommendation_router
-from magikarp.routers import notification_router
+from app.routers import chat_router
 
 # Create FastAPI instance
 app = FastAPI(
@@ -22,9 +20,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(recommendation_router)
 app.include_router(chat_router)
-app.include_router(notification_router)
 
 
 # Root endpoint

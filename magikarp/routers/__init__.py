@@ -1,3 +1,0 @@
-from magikarp.routers.chat import chat_router
-from magikarp.routers.notifications import notification_router
-from magikarp.routers.recommendations import recommendation_router

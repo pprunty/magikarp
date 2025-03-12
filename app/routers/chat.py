@@ -1,9 +1,9 @@
 import logging
 from fastapi import Depends, APIRouter, HTTPException, status
-from magikarp.services.model import TransformerModel
-from magikarp.dependencies import get_transformer_service
-from magikarp.models.responses import ChatResponse
-from magikarp.models.requests import ChatRequest
+from app.services.model import TransformerModel
+from app.dependencies import get_transformer_service
+from app.models.responses import ChatResponse
+from app.models.requests import ChatRequest
 
 # Configure the logger
 logging.basicConfig(level=logging.INFO)

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Tuple, Literal
 
-from magikarp.enums.prompts import PromptsEnum
+from app.enums.prompts import PromptsEnum
 
 
 def get_enum_values(enum_cls: Enum) -> Tuple[str, ...]:

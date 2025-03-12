@@ -4,113 +4,175 @@
 
 ## Description
 
-The EVERYTHING Autonomous Agent, also known as Magikarp, is a Python FastAPI application designed to utilize Dan's data
-to provide timely and accurate recommendations. It can simulate push notifications for specific dates and offers a chat
-companion powered by AI and Large Language Models (LLMs).
-
-⚠️ **Please note that the setup for this project may take around 30 minutes. To ensure it’s worth your time, I have
-created a brief video demo, which you can
-watch [here](https://drive.google.com/file/d/1AjILMCiRm8YwZPQLncvkX8y0AuZF2MpE/view?usp=sharing). It is highly
-recommended to watch the demo before starting.**
+Magikarp is an autonomous agent built with FastAPI and Ollama, designed to provide chat interactions through a simple API interface. It leverages the DeepSeek-R1 model to deliver conversational AI capabilities in a lightweight, self-hosted package.
 
 ## How It Works / Key Features
 
-- **AI and LLM Integration**: Utilizes Meta's Llama 3 model through [`ollama`](https://ollama.com/).
-- **Modelfile Configuration**: Uses a [`Modelfile`](./Modelfile) to create a pre-defined configuration for the Magikarp
-  model based on the [instructions](./instructions.txt).
-- **Seamless Integration**: Runs a separate `ollama` server alongside the Python FastAPI webserver, enabling APIs for
-  recommendations, notifications, and general AI prompting using Dan's contextual data.
-- **User Data Management**: User data would typically be stored locally on the user's device, with a short look-back
-  period (
-  e.g., 7 days). Dan's data is ingested by the web server at runtime and used to formulate prompts to `ollama`.
-- **Chat Companion API**: Provides interactive chat functionality using the Magikarp model, which is based off Llama 3,
-  and has contextual knowledge of Dan's data.
-- **Personalized Recommendation API**: Delivers Dan prompt suggestions based on Dan's activities and preferences which
-  Dan can select to interact with Magikarp.
-- **Notification Simulation API**: Provides simulated push mobile notifications for Dan based on a provided date.
-
-Example of Magikarp chat API:
-
-![ezgif-6-0567460a35](https://github.com/pprunty/magikarp/assets/58374462/e9fe4c56-ee18-455b-9ff1-e4bad8cdef94)
+- **Local LLM Integration**: Uses Ollama to run the DeepSeek-R1 model locally, offering privacy and control over your AI interactions
+- **FastAPI Backend**: Provides a robust and performant API for chat interactions
+- **Docker Support**: Easily deployable via Docker for consistent environments
+- **Customizable Context Window**: Configurable parameters for the AI model to balance performance and capability
+- **Poetry Dependency Management**: Modern Python dependency management for reproducible builds
 
 ## Pre-requisites
 
 - Python 3.12
 - Poetry
 - ollama (optional / `ollama` image used in docker commands to run the application)
-- Docker
-- docker-compose
 
-_Note: If you wish to download `ollama`, you can follow the instructions [here](https://ollama.com/). However, it is
-easier to run the application through Docker by following the instructions in the next section (although this will mean
-much slower responses from the LLM)._
+```shell
+brew install ollama
+```
+
+> **Note:** Ollama is required for local model serving but can be skipped if you're using Docker deployment.
 
 ## Quickstart
 
-The easiest way to run this application is via docker compose.
+### Local Development
 
-### Docker
+1. Install dependencies:
+   ```shell
+   make install
+   ```
 
-To run the application, make sure you have your Docker daemon running (docker hub desktop app opened) and run the
-following:
+2. Start the Ollama server:
+   ```shell
+   make serve
+   ```
+
+3. Create and run the model (in a new terminal):
+   ```shell
+   make model
+   ```
+
+4. (Optional) Interact with the model directly in terminal:
+   ```shell
+   make run
+   ```
+
+5. Start the FastAPI server (in a new terminal):
+   ```shell
+   make server
+   ```
+
+6. Access the API at http://127.0.0.1:8000 or the documentation at http://127.0.0.1:8000/docs
+
+> **Tip:** You can use `make help` to see all available commands.
+
+### Docker Deployment
+
+The easiest way to run this application in a production-like environment is via docker compose:
 
 ```shell
 make docker-compose
 ```
 
-This command will do the following:
+This will build and start all necessary containers configured in the docker-compose.yml file.
 
-1. Run an `ollama` server, which runs Meta's Llama 3 model using the [Modelfile](./Modelfile) outline.
-2. Run a FastAPI web server with APIs for interacting with Magikarp which has context on Dan's data.
+> **Warning:** Docker deployment requires significant disk space for model storage. When running with Docker on
+> MacOS, ollama does not have access to the native GPUs on device and therefore model responses will be very slow.
 
-_Note: `ollama`'s Llama3 model uses ~ 4GB of Docker disk space and can take up to ~30 minutes to install on initial run.
-The model will be persisted in the volume mount in the `ollama` directory at the project root, so this will go quickly
-with subsequent starts._
+## Model Configuration
 
-** IMPORTANT: Before triggering any of the APIs, you need to wait for the `ollama` image to finish installing and
-initializzing
-the magikarp LLM, this takes place in the [entrypoint.sh](./entrypoint.sh).
+Magikarp uses a custom configuration of the DeepSeek-R1 model with the following parameters:
 
-The FastAPI webserver has two endpoints:
+```
+FROM deepseek-r1
 
-1. **Swagger endpoint:** The Swagger documentation is available
-   at [http://localhost:8000/docs](http://127.0.0.1:8000/docs). This endpoint allows you to test out the APIs.
-   ![swagger.png](images/swagger.png)
-2. **Redoc endpoint (extra):** The Redoc documentation is a more stylish version of the Swagger documentation which does
-   not allow for manual triggering of the APIs. It is available
-   at [http://localhost:8000/redoc](http://localhost:8000/redoc).
-   ![redoc.png](images/redoc.png)
+# Set the context window (default: 2048)
+PARAMETER num_ctx 6114
+PARAMETER num_thread 4
 
-_Note: Running using docker-compose will mean responses are super slow from the APIs. This is because when you run
-Ollama as a native Mac application on M1 (or newer) hardware, its runs the LLM on the GPU.
-Docker Desktop on Mac, does NOT expose the Apple GPU to the container runtime, it only exposes an ARM CPU (or virtual
-x86 CPU via Rosetta emulation) so when you run Ollama inside that container, it is running purely on CPU, not utilizing
-your GPU hardware.
-On PC's NVIDIA and AMD have support for GPU pass-through into containers, so it is possible for ollama in a container to
-access the GPU, but this is not possible on Apple hardware._
+# Set the temperature (higher is more creative, lower is more coherent)
+PARAMETER temperature 0.33
 
-### Local Development
-
-If you want to contribute to the development of the app, you
-must [follow the instructions to download `ollama`](https://ollama.com/) and all other software dependencies outlined in
-the pre-requisites section (except for Docker, obviously).
-
-Once you have `ollama` installed on your system, you can run the following:
-
-```shell
-make model
+# System message
+SYSTEM """
+Introduce yourself always as 'Magikarp'.
+"""
 ```
 
-This will pull the llama3 model (which takes some time), and then create the Magikarp LLM model based off Llama 3.
+You can modify these parameters in the Modelfile to adjust the model's behavior.
 
-You can then run,
+> **Info:** For complete documentation on Modelfile configuration:
+> - [Ollama Modelfile Documentation](https://github.com/ollama/ollama/blob/main/docs/modelfile.md) - Detailed reference for all available parameters and configuration options
+> - [DeepSeek-R1 Whitepaper](https://github.com/deepseek-ai/DeepSeek-R1/blob/main/DeepSeek_R1.pdf) - Technical details about the DeepSeek-R1 model
+> - [Ollama Structured Outputs Guide](https://ollama.com/blog/structured-outputs) - Learn how to get structured JSON responses from your model
 
-```shell
-make run
-```
+## Data Integration (Potential Usecase)
 
-This will run the FastAPI web server with reload available, allowing you to update the code and see your changes in
-real-time. The api endpoint urls are the same as for the docker setup.
+One of the key features of Magikarp is its ability to integrate with local data, providing the LLM with contextual awareness about the user. This creates a more personalized AI experience while keeping sensitive data local.
+
+### How Data Integration Works
+
+1. **Data Storage**: The `/data` directory acts as a personal "dropbox" where various data files can be stored, such as calendar events, location history, social media activity, or user preferences.
+
+2. **Data Service**: The `DataService` class loads and manages this data:
+   ```python
+   class DataService:
+       def __init__(self, base_path: str = 'data'):
+           self.base_path = os.path.join(os.getcwd(), base_path)
+           # Data properties are loaded lazily
+           self._file_contents = {}
+           
+       def load_all_files(self):
+           # Dynamically loads all files in the data directory
+           
+       def get_formatted_data(self):
+           # Formats the loaded data for injection into the model context
+   ```
+
+3. **Model Integration**: The `TransformerModel` class injects this data into conversations:
+   ```python
+   def ask_model(self, prompt: str) -> str:
+       # Format user data and combine with prompt
+       user_message = {'role': 'user', 'content': self.formatted_user_data + prompt}
+       self.chat_messages.append(user_message)
+       # Send to LLM
+       response = ollama.chat(model='magikarp', messages=self.chat_messages)
+       return response['message']['content']
+   ```
+
+> **Important:** All data is processed locally on your device and is never sent to external servers, ensuring privacy and data sovereignty.
+
+### Use Cases & Examples
+
+1. **Personalized Recommendations**:
+   ```
+   "Based on your recent workout history and location data, I notice you've been jogging in Central Park. Have you considered trying the riverside path for a change of scenery?"
+   ```
+
+2. **Contextual Notifications**:
+   ```
+   "You have a meeting with Alex in 30 minutes, and traffic looks heavy on your usual route. You might want to leave 10 minutes earlier."
+   ```
+
+3. **Data-Driven Insights**:
+   ```
+   "I've noticed your Spotify playlists include a lot of focus music on weekday mornings. Would you like me to automatically queue up your 'Deep Focus' playlist at 9am on workdays?"
+   ```
+
+### Getting Started with Your Own Data
+
+To experiment with this feature:
+
+1. Create your own data files in the `/data` directory following the existing formats
+2. Modify the `DataService` class if needed to handle new data types
+3. Run the application and interact with the AI
+
+> **Example:** Try adding a simple JSON file with your interests to see how the AI incorporates that information into responses.
+
+This approach demonstrates a powerful use case for local LLMs: creating AI assistants that can access and reason with personal data without privacy concerns, as all processing remains on your device.
+
+### Future Possibilities
+
+This pattern opens up numerous possibilities:
+- Integration with local health data (from wearables)
+- Processing personal document collections
+- Analysis of private communications
+- Custom data connectors for other services
+
+By keeping sensitive data local while leveraging the power of open-source LLMs, Magikarp provides a foundation for building truly personalized AI assistants without compromising privacy.
 
 ## APIs
 
@@ -118,48 +180,112 @@ The application provides the following APIs:
 
 ### Chat API
 
-- `/chat`: Allows Dan to interact in a continuous conversation with Magikarp.
+- **Endpoint**: `/chat`
+- **Method**: POST
+- **Description**: Send prompts to the AI and receive responses
+- **Request Body**:
+  ```json
+  {
+    "prompt": "Hello there."
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "response": "Hey! It's me, Magikarp! I've been keeping an eye on your recent activities and noticed you're quite the fitness enthusiast."
+  }
+  ```
 
-### Notifications API
+### Root Endpoint
 
-- `/notifications`: Sends simulated push-notifications to Dan based on predefined rules and his user data. You can add
-  new rules to sample how the push-notifications are updated.
+- **Endpoint**: `/`
+- **Method**: GET
+- **Description**: Returns a welcome message with instructions to access the documentation
 
-### Recommendation API
+> **Tip:** You can test the API using the interactive Swagger UI at http://127.0.0.1:8000/docs
 
-- `/recommendations`: Provides predefined prompt suggestions for Dan to select and use to prompt Magikarp. These prompt
-  suggestions are based off Dan's data.
-- `/recommendations/suggest`: Generates a list of new prompt suggestions for Dan to use to prompt Magikarp. This API
-  ensures Dan's suggested prompts for Magikarp are updated throughout the day based on the time of day and his schedule.
+## Project Structure
+
+```
+magikarp/
+├── app/                     # Main application code
+│   ├── __init__.py
+│   ├── dependencies.py      # FastAPI dependencies
+│   ├── main.py              # FastAPI application entry point
+│   ├── enums/               # Enumeration definitions
+│   ├── models/              # Pydantic models for API
+│   ├── routers/             # API route definitions
+│   ├── services/            # Business logic services
+│   └── utils/               # Utility functions
+├── data/                    # Application data files (below are examples)
+│   ├── calendar.csv
+│   ├── location.csv
+│   ├── social_media.json
+│   ├── spotify_playlists.json
+│   └── user_profile.json
+├── models/                  # Directory for Ollama models (mostly gitignored)
+├── images/                  # Project images
+├── Dockerfile.fastapi       # Docker configuration for the FastAPI service
+├── docker-compose.yaml      # Docker Compose configuration
+├── entrypoint.sh            # Docker entrypoint script
+├── Modelfile                # Ollama model configuration
+├── pyproject.toml           # Poetry configuration
+├── poetry.lock              # Poetry lock file
+├── Makefile                 # Build and development tasks
+├── README.md                # Project documentation
+└── LICENSE                  # License information
+```
+
+## Make Commands
+
+The project includes a comprehensive Makefile to simplify common tasks:
+
+### Poetry Commands
+- `make install` - Install project dependencies using Poetry
+- `make update` - Update project dependencies
+- `make lock` - Generate Poetry lock file
+
+### API Commands
+- `make server` - Start FastAPI development server
+
+### Ollama Commands
+- `make serve` - Start Ollama server with models directory
+- `make model` - Create Ollama model from Modelfile
+- `make run` - Run the Ollama model
+- `make delete` - Delete the Ollama model
+
+### Docker Commands
+- `make docker-build` - Build Docker image
+- `make docker-run` - Run Docker container
+- `make docker-compose` - Start with docker-compose
+
+## Resource Considerations
+
+When running Ollama models locally, be mindful of:
+
+> **Caution:** Large language models can be resource-intensive. Monitor your system's performance and adjust parameters as needed.
+
+- **Context Window Size**: The default is set to 6114 tokens, which should work on most modern machines. Larger context windows (up to 32768) require significantly more RAM and may cause performance issues.
+- **Thread Count**: Set to 4 by default, adjust based on your CPU capabilities.
+- **Temperature**: Set to 0.33 for more deterministic responses. Increase for more creative outputs.
 
 ## Improvements
 
-1. **Injecting user's contextual data:** In this implementation, I inject user's formatted data for each prompt to
-   Magikarp, as
-   seen [here](https://github.com/pprunty/magikarp/blob/main/magikarp/services/model.py#L33). This is inefficient, and
-   maybe it would be better to inject user's (Dan's) data upon [Magikarp model creation](./Modelfile). This
-   would be more realistic in real-life scenario where the model could sit on the hardware and Magikarp is updated each
-   morning with
-   new contextual data for the user, or better yet, is updated in real-time to handle real-time responses to user's
-   behaviour.
-2. **Handling Magikarp responses:** Despite asking Magikarp for only JSON in its response, it sometimes adds "Here is
-   the suggestions: {...}".
-   This makes it difficult to deal with handling API responses appropriately and something better could be put in place
-   here. I tried to handle
-   it gracefully [here](https://github.com/pprunty/magikarp/blob/main/magikarp/routers/notifications.py#L36), but it is
-   admittedly a challenge.
-3. **Performance:** Performance could be improved by leveraging FastAPI and `ollama`'s async capabilities better.
-   Additionally,
-   configuring better GPU usage configuration would be ideal. In real-life scenario the hardware's GPU could be
-   leveraged.
-4. **Push-notification rules:**
-   In [this part of the code](https://github.com/pprunty/magikarp/blob/main/magikarp/enums/rules.py#L5), I outline some
-   default rules for how to prompt Dan his
-   push-notifications,
-   with additional capabilities for adding new rules. This could be improved to _learn_ some rules for Dan, based on his
-   contextual data and behaviour. Additionally, rules could be put into buckets. In the demo, I add a rule asking "
-   Notifications should
-   be aggressive and affirmative to encourage me." - This rule could be put into a 'behavioural/tone' bucket with some
-   sort of
-   priority versus previously created rules which would add a higher-level of personalization to Dan's
-   push-notifications.
+Potential areas for enhancement:
+
+1. **Structured Output Mode**: Add configuration flag to enable JSON-formatted responses for programmatic consumption
+2. **Adaptive Resource Management**: Implement automatic resource detection and optimization when running locally to balance performance and system load
+3. **Streaming API Responses**: Enhance the FastAPI `/chat` endpoint with SSE or WebSocket support for real-time streaming responses
+4. **Multi-agent Orchestration**: Enable running multiple model instances in parallel to generate, refine, and select optimal responses
+5. **Contextual Memory**: Implement persistent chat history that feeds back into the model context for improved conversation coherence
+6. **System Integration Capabilities**: Explore secure frameworks for allowing the agent to execute commands, create or modify files based on structured output prompts
+7. **Lightweight Web Interface**: Develop a minimal browser-based UI with WebSocket support for direct interactions and streaming responses
+8. **User Authentication**: Add multi-user support with personal data isolation
+9. **Vector Database Integration**: Implement retrieval-augmented generation for improved factual responses
+10. **Extensible Plugin System**: Create a modular architecture that allows for community-developed extensions
+11. **Multi-modal Input Processing**: Add support for processing images and other non-text inputs
+12. **Comprehensive Observability**: Enhance logging, monitoring, and performance tracking
+13. **Fine-tuning Toolkit**: Provide utilities for customizing the base model with domain-specific knowledge
+14. **Agent Automation Framework**: Expand capabilities to allow for scheduled or event-triggered autonomous actions
+
+> **Contribute:** Feel free to submit pull requests for any of these improvements or suggest new features!

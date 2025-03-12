@@ -2,9 +2,9 @@ from typing import List, Union
 from pydantic import BaseModel, Field
 from datetime import date
 
-from magikarp.enums.rules import RuleSetEnum
-from magikarp.enums.prompts import PromptsEnum
-from magikarp.utils.prompts import PromptsLiteral
+from app.enums.rules import RuleSetEnum
+from app.enums.prompts import PromptsEnum
+from app.utils.prompts import PromptsLiteral
 
 
 class PromptRequest(BaseModel):

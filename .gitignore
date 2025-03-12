@@ -73,3 +73,6 @@ instance/
 # Sphinx documentation
 docs/_build/
 docs/autodoc
+
+models/*
+!models/.gitkeep

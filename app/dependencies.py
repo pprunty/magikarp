@@ -1,7 +1,7 @@
 """
 Module to define dependency functions for the FastAPI application.
 """
-from magikarp.services.model import TransformerModel
+from app.services.model import TransformerModel
 
 
 def get_transformer_service() -> TransformerModel:

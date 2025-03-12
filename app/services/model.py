@@ -3,8 +3,8 @@ import logging
 import ollama
 from enum import Enum
 from typing import List
-from magikarp.enums.rules import RuleSetEnum
-from magikarp.services.data import DataService
+from app.enums.rules import RuleSetEnum
+from app.services.data import DataService
 from datetime import date
 
 # Configure the logger
