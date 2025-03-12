@@ -24,7 +24,8 @@ Magikarp is an autonomous agent built with FastAPI and Ollama, designed to provi
 brew install ollama
 ```
 
-> **Note:** Ollama is required for local model serving but can be skipped if you're using Docker deployment.
+> [!NOTE]  
+> Ollama is required for local model serving but can be skipped if you're using Docker deployment.
 
 ## Quickstart
 
@@ -57,7 +58,8 @@ brew install ollama
 
 6. Access the API at http://127.0.0.1:8000 or the documentation at http://127.0.0.1:8000/docs
 
-> **Tip:** You can use `make help` to see all available commands.
+> [!TIP]  
+> You can use `make help` to see all available commands.
 
 ### Docker Deployment
 
@@ -69,8 +71,8 @@ make docker-compose
 
 This will build and start all necessary containers configured in the docker-compose.yml file.
 
-> **Warning:** Docker deployment requires significant disk space for model storage. When running with Docker on
-> MacOS, ollama does not have access to the native GPUs on device and therefore model responses will be very slow.
+> [!WARNING]  
+> Docker deployment requires significant disk space for model storage. When running with Docker on MacOS, ollama does not have access to the native GPUs on device and therefore model responses will be very slow.
 
 ## Model Configuration
 
@@ -94,7 +96,8 @@ Introduce yourself always as 'Magikarp'.
 
 You can modify these parameters in the Modelfile to adjust the model's behavior.
 
-> **Info:** For complete documentation on Modelfile configuration:
+> [!INFO]  
+> For complete documentation on Modelfile configuration:
 > - [Ollama Modelfile Documentation](https://github.com/ollama/ollama/blob/main/docs/modelfile.md) - Detailed reference for all available parameters and configuration options
 > - [DeepSeek-R1 Whitepaper](https://github.com/deepseek-ai/DeepSeek-R1/blob/main/DeepSeek_R1.pdf) - Technical details about the DeepSeek-R1 model
 > - [Ollama Structured Outputs Guide](https://ollama.com/blog/structured-outputs) - Learn how to get structured JSON responses from your model
@@ -133,7 +136,8 @@ One of the key features of Magikarp is its ability to integrate with local data,
        return response['message']['content']
    ```
 
-> **Important:** All data is processed locally on your device and is never sent to external servers, ensuring privacy and data sovereignty.
+> [!IMPORTANT]  
+> All data is processed locally on your device and is never sent to external servers, ensuring privacy and data sovereignty.
 
 ### Use Cases & Examples
 
@@ -160,7 +164,8 @@ To experiment with this feature:
 2. Modify the `DataService` class if needed to handle new data types
 3. Run the application and interact with the AI
 
-> **Example:** Try adding a simple JSON file with your interests to see how the AI incorporates that information into responses.
+> [!EXAMPLE]  
+> Try adding a simple JSON file with your interests to see how the AI incorporates that information into responses.
 
 This approach demonstrates a powerful use case for local LLMs: creating AI assistants that can access and reason with personal data without privacy concerns, as all processing remains on your device.
 
@@ -202,7 +207,8 @@ The application provides the following APIs:
 - **Method**: GET
 - **Description**: Returns a welcome message with instructions to access the documentation
 
-> **Tip:** You can test the API using the interactive Swagger UI at http://127.0.0.1:8000/docs
+> [!TIP]  
+> You can test the API using the interactive Swagger UI at http://127.0.0.1:8000/docs
 
 ## Project Structure
 
@@ -263,7 +269,8 @@ The project includes a comprehensive Makefile to simplify common tasks:
 
 When running Ollama models locally, be mindful of:
 
-> **Caution:** Large language models can be resource-intensive. Monitor your system's performance and adjust parameters as needed.
+> [!CAUTION]  
+> Large language models can be resource-intensive. Monitor your system's performance and adjust parameters as needed.
 
 - **Context Window Size**: The default is set to 6114 tokens, which should work on most modern machines. Larger context windows (up to 32768) require significantly more RAM and may cause performance issues.
 - **Thread Count**: Set to 4 by default, adjust based on your CPU capabilities.
@@ -288,4 +295,5 @@ Potential areas for enhancement:
 13. **Fine-tuning Toolkit**: Provide utilities for customizing the base model with domain-specific knowledge
 14. **Agent Automation Framework**: Expand capabilities to allow for scheduled or event-triggered autonomous actions
 
-> **Contribute:** Feel free to submit pull requests for any of these improvements or suggest new features!
+> [!NOTE]  
+> Feel free to submit pull requests for any of these improvements or suggest new features!
