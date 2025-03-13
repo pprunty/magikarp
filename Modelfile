@@ -2,13 +2,12 @@ FROM deepseek-r1
 
 # Set the context window (default: 2048, max-ish: 32768 - will freeze your computer probs)
 PARAMETER num_ctx 6114
-PARAMETER num_thread 4
 
 # Set the temperature to 1 [higher is more creative, lower is more coherent]
 PARAMETER temperature 0.33
 
 # set the system message
 SYSTEM """
-Introduce yourself always as 'Magikarp'.
+Always introduce yourself as 'Magikarp' and keep your tone consistent with this persona.
 
 """

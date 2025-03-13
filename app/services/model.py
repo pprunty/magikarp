@@ -4,7 +4,7 @@ import ollama
 from enum import Enum
 from typing import List
 from app.enums.rules import RuleSetEnum
-from app.services.data import DataService
+from app.plugins.manager import PluginManager
 from datetime import date
 
 # Configure the logger
@@ -14,15 +14,21 @@ logger = logging.getLogger('uvicorn.debug')
 class TransformerModel:
     """Service class for leveraging Ollama's use of the Llama3 transformer model."""
 
-    def __init__(self):
-        """Initializes the TransformerModel with user data."""
+    def __init__(self, plugin_manager: PluginManager = None):
+        """
+        Initializes the TransformerModel with plugin manager.
+
+        Args:
+            plugin_manager (PluginManager, optional): Plugin manager instance for prompt processing
+        """
         self.chat_messages = []
-        self.user_data_service = DataService()  # The user would be fetched via an ID in real-life scenario
-        self.formatted_user_data = self.user_data_service.get_formatted_data()
         self.dynamic_rules = list(RuleSetEnum)
+        self.plugin_manager = plugin_manager or PluginManager()
 
     def ask_model(self, prompt: str) -> str:
-        """Asks the model a question based on the given prompt and user data.
+        """
+        Asks the model a question based on the given prompt.
+        Processes the prompt through active plugins before sending to the model.
 
         Args:
             prompt (str): The input prompt for the model.
@@ -30,7 +36,10 @@ class TransformerModel:
         Returns:
             str: The model's response.
         """
-        user_message = {'role': 'user', 'content': self.formatted_user_data + prompt}
+        # Process the prompt through all active plugins
+        processed_prompt = self.plugin_manager.process_prompt(prompt)
+
+        user_message = {'role': 'user', 'content': processed_prompt}
         self.chat_messages.append(user_message)
         logger.info(f"Chat messages: {self.chat_messages}")
 
@@ -42,7 +51,8 @@ class TransformerModel:
             raise
 
     def generate_suggested_prompts(self) -> dict:
-        """Generates predefined prompt suggestions based on user data.
+        """
+        Generates predefined prompt suggestions.
 
         Returns:
             dict: A dictionary of suggested prompts.
@@ -51,11 +61,15 @@ class TransformerModel:
             ValueError: If the response cannot be parsed as JSON.
         """
         prompt = (
-            "Can you, based on my user data, provide me with predefined prompt suggestions to ask an AI assistant? "
-            "Please give your response in JSON format where the keys in the response are numbers and values the suggested"
+            "Can you provide me with predefined prompt suggestions to ask an AI assistant? "
+            "Please give your response in JSON format where the keys in the response are numbers and values the suggested "
             "prompt."
         )
-        user_message = {'role': 'user', 'content': self.formatted_user_data + prompt}
+
+        # Process the prompt through all active plugins
+        processed_prompt = self.plugin_manager.process_prompt(prompt)
+
+        user_message = {'role': 'user', 'content': processed_prompt}
         self.chat_messages.append(user_message)
         logger.info(f"Chat messages: {self.chat_messages}")
 
@@ -73,51 +87,48 @@ class TransformerModel:
             logger.error(f"Error generating suggested prompts: {e}")
             raise ValueError("Failed to parse suggested prompts from the response")
 
-    def get_push_notifications(self, date: date, rules: List[str]) -> str:
-        """Asks the model for simulated push notifications for a given date based on user defined
-        rule set.
-
-        Args:
-            date (str): The date for which to generate notifications.
-            rules (List[RuleSetEnum]): The list of rules to apply for generating notifications.
-
-        Returns:
-            str: The model's response.
-        """
-        rules_str = "\n".join([rule for rule in rules])
-        prompt = (
-            f"For the given date {date} and these user defined rules stored as preferences on the user's device:\n"
-            f"{rules_str}\n\n"
-            f"Provide simulated push notifications to the user for the date using the user's metadata and rules. "
-            f"Your response should be in JSON format where the key is the datetime of the notification and the "
-            f"value is no more than two sentences detailing the notification."
-            f"Please ensure notifications include at least six notifications and include at least one health and social "
-            f"encouragement notifications."
-        )
-        try:
-            return self.ask_model(prompt=prompt)
-        except Exception as e:
-            logger.error(f"Error in asking model: {e}")
-            raise
-
-    def add_rule(self, rule_description: str):
-        """Dynamically adds a new rule to the rule set.
-
-        Args:
-            rule_description (str): The description of the new rule.
-
-        Returns:
-            None
-        """
-        new_rule_name = f"dynamic_rule_{len(self.dynamic_rules) + 1}"
-        # Simulate adding the rule to the Enum by appending it to the dynamic list
-        self.dynamic_rules.append(Enum(new_rule_name, rule_description))
-        logger.info(f"Added new rule: {new_rule_name} = {rule_description}")
-
     def get_dynamic_rules(self) -> List[str]:
-        """Returns the list of all dynamic rules.
+        """
+        Returns the list of all dynamic rules.
 
         Returns:
             List[str]: The descriptions of all dynamic rules.
         """
         return [rule.value for rule in self.dynamic_rules]
+
+    def register_plugin(self, plugin_name: str, **kwargs) -> bool:
+        """
+        Register a plugin with the transformer model.
+
+        Args:
+            plugin_name (str): Name of the plugin to register
+            **kwargs: Parameters to pass to the plugin constructor
+
+        Returns:
+            bool: True if registration successful, False otherwise
+        """
+        return self.plugin_manager.register_plugin(plugin_name, **kwargs)
+
+    def activate_plugin(self, plugin_name: str) -> bool:
+        """
+        Activate a registered plugin.
+
+        Args:
+            plugin_name (str): Name of the plugin to activate
+
+        Returns:
+            bool: True if activation successful, False otherwise
+        """
+        return self.plugin_manager.activate_plugin(plugin_name)
+
+    def deactivate_plugin(self, plugin_name: str) -> bool:
+        """
+        Deactivate an active plugin.
+
+        Args:
+            plugin_name (str): Name of the plugin to deactivate
+
+        Returns:
+            bool: True if deactivation successful, False otherwise
+        """
+        return self.plugin_manager.deactivate_plugin(plugin_name)

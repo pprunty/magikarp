@@ -29,7 +29,27 @@ brew install ollama
 
 ## Quickstart
 
+## Quickstart
+
 ### Local Development
+
+1. **All-in-one setup**:
+   ```shell
+   make everything
+   ```
+   This command will:
+   - Check for required prerequisites (Python, Poetry, Ollama)
+   - Install dependencies
+   - Start the Ollama server (on port 11434)
+   - Create the Magikarp model (takes 10-20 minutes, uses ~5GB)
+   - Show clear instructions for next steps
+
+   After the setup completes:
+   - To chat with the model via terminal: `make run`
+   - To start the API server: `make server` (runs on http://127.0.0.1:8000)
+   - To stop the Ollama server: `make stop`
+
+   OR follow these steps individually:
 
 1. Install dependencies:
    ```shell
@@ -56,7 +76,12 @@ brew install ollama
    make server
    ```
 
-6. Access the API at http://127.0.0.1:8000 or the documentation at http://127.0.0.1:8000/docs
+6. When finished, you can stop the Ollama server running in the other terminal via:
+   ```shell
+   make stop
+   ```
+
+8. Access the API at http://127.0.0.1:8000 or the documentation at http://127.0.0.1:8000/docs
 
 > [!TIP]  
 > You can use `make help` to see all available commands.
@@ -246,24 +271,37 @@ magikarp/
 
 The project includes a comprehensive Makefile to simplify common tasks:
 
+## Make Commands
+
+The project includes a comprehensive Makefile to simplify common tasks:
+
 ### Poetry Commands
 - `make install` - Install project dependencies using Poetry
 - `make update` - Update project dependencies
 - `make lock` - Generate Poetry lock file
 
 ### API Commands
-- `make server` - Start FastAPI development server
+- `make server` - Start FastAPI development server (runs on http://127.0.0.1:8000)
 
 ### Ollama Commands
-- `make serve` - Start Ollama server with models directory
+- `make serve` - Start Ollama server with models directory (runs on port 11434)
 - `make model` - Create Ollama model from Modelfile
-- `make run` - Run the Ollama model
+- `make run` - Run the Ollama model in interactive terminal mode
 - `make delete` - Delete the Ollama model
+- `make stop` - Stop the Ollama server running in the background
 
 ### Docker Commands
 - `make docker-build` - Build Docker image
 - `make docker-run` - Run Docker container
 - `make docker-compose` - Start with docker-compose
+
+### Development Commands
+- `make everything` - One-command setup that:
+   - Checks for required prerequisites
+   - Installs dependencies
+   - Starts the Ollama server
+   - Creates the model (takes 10-20 minutes, uses ~5GB)
+   - Provides clear instructions for next steps
 
 ## Resource Considerations
 
