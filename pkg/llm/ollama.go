@@ -35,22 +35,71 @@ func (c *OllamaClient) Name() string {
 	return c.model
 }
 
-// Chat sends a message to Ollama and returns its response
-func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
-	// Generate system message from tool configs
-	systemMessage := map[string]string{
-		"role":    "system",
-		"content": GenerateSystemPrompt(c.configs),
+// shouldUseTool checks if a message indicates the need for a specific tool
+func (c *OllamaClient) shouldUseTool(message string, tool ToolConfig) bool {
+	lowerMsg := strings.ToLower(message)
+
+	// Check direct keywords
+	for _, keyword := range tool.TriggerKeywords {
+		if strings.Contains(lowerMsg, keyword) {
+			return true
+		}
 	}
 
+	// Check for tool combinations
+	toolCombos := map[string][]string{
+		"read_file": {"edit", "modify", "change", "update", "execute", "run"},
+		"edit_file": {"after", "then", "read", "check"},
+		"execute_command": {"output", "result", "after", "then"},
+		"list_files": {"then", "read", "edit", "execute"},
+	}
+
+	if keywords, ok := toolCombos[tool.Name]; ok {
+		for _, keyword := range keywords {
+			if strings.Contains(lowerMsg, keyword) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// Chat sends a message to Ollama and returns its response
+func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
+	// Generate enhanced system message
+	systemPrompt := `You are a helpful AI assistant with access to various tools. When using tools:
+
+1. For simple tasks, use a single tool directly
+2. For complex tasks that require multiple steps:
+   - Explain your plan first
+   - Use tools in a logical sequence
+   - Process each tool's output before proceeding
+   - Combine results meaningfully
+
+Common tool combinations:
+- Reading then editing files
+- Reading files then executing commands
+- Listing files then reading/editing them
+- Executing commands then processing their output
+
+Always explain what you're doing and why. If a task requires multiple tools, explain the sequence.`
+
+	systemPrompt += "\n\n" + GenerateSystemPrompt(c.configs)
+
 	// Convert messages to Ollama format
-	ollamaMessages := make([]map[string]string, len(messages)+1)
-	ollamaMessages[0] = systemMessage
-	for i, msg := range messages {
-		ollamaMessages[i+1] = map[string]string{
+	ollamaMessages := []map[string]string{
+		{
+			"role":    "system",
+			"content": systemPrompt,
+		},
+	}
+
+	for _, msg := range messages {
+		ollamaMessages = append(ollamaMessages, map[string]string{
 			"role":    msg.Role,
 			"content": msg.Content,
-		}
+		})
 	}
 
 	// Create request body
@@ -60,38 +109,33 @@ func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Too
 		"stream":   false,
 	}
 
-	// Only include tools if the last message might need them
-	lastMessage := messages[len(messages)-1].Content
-	needsTools := false
-	if len(tools) > 0 {
-		// Check if the message might need tools using trigger keywords
-		lowerMsg := strings.ToLower(lastMessage)
+	// Check if tools should be included
+	if len(tools) > 0 && len(messages) > 0 {
+		lastMessage := messages[len(messages)-1].Content
+		needsTools := false
+
+		// Check each tool and potential combinations
 		for _, tool := range c.configs.Tools {
-			for _, keyword := range tool.TriggerKeywords {
-				if strings.Contains(lowerMsg, keyword) {
-					needsTools = true
-					break
-				}
-			}
-			if needsTools {
+			if c.shouldUseTool(lastMessage, tool) {
+				needsTools = true
 				break
 			}
 		}
-	}
 
-	if needsTools {
-		ollamaTools := make([]map[string]interface{}, len(tools))
-		for i, tool := range tools {
-			ollamaTools[i] = map[string]interface{}{
-				"type": "function",
-				"function": map[string]interface{}{
-					"name":        tool.Name,
-					"description": tool.Description,
-					"parameters":  tool.InputSchema,
-				},
+		if needsTools {
+			ollamaTools := make([]map[string]interface{}, len(tools))
+			for i, tool := range tools {
+				ollamaTools[i] = map[string]interface{}{
+					"type": "function",
+					"function": map[string]interface{}{
+						"name":        tool.Name,
+						"description": tool.Description,
+						"parameters":  tool.InputSchema,
+					},
+				}
 			}
+			reqBody["tools"] = ollamaTools
 		}
-		reqBody["tools"] = ollamaTools
 	}
 
 	// Marshal request body
@@ -138,7 +182,6 @@ func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Too
 	// Convert tool calls to ToolUse objects
 	var toolUses []ToolUse
 	for _, toolCall := range response.Message.ToolCalls {
-		// Skip empty tool calls
 		if toolCall.Function.Name == "" {
 			continue
 		}
@@ -162,57 +205,14 @@ func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Too
 
 // SendToolResult sends a tool result back to Ollama and returns its response
 func (c *OllamaClient) SendToolResult(ctx context.Context, messages []Message, toolResults []ToolResult) ([]Message, []ToolUse, error) {
-	// Create a proper tool result format for better understanding
-	var toolResultsSummary string
-	var lastUserMessage string
-
-	// Find the last user message for context
-	for i := len(messages) - 1; i >= 0; i-- {
-		if messages[i].Role == "user" {
-			lastUserMessage = messages[i].Content
-			break
-		}
-	}
-
-	// Format tool results with context
-	for i, result := range toolResults {
-		formattedResult := fmt.Sprintf("Tool result from %s: %s", result.ID, result.Content)
-		if result.IsError {
-			formattedResult = fmt.Sprintf("Error from tool %s: %s", result.ID, result.Content)
-		}
-		toolResults[i].Content = formattedResult
-		toolResultsSummary += formattedResult + "\n"
-	}
-	
-	// Add tool results to messages
+	// Add tool results to messages with context
 	for _, result := range toolResults {
 		messages = append(messages, Message{
 			Role:    "tool",
-			Content: result.Content,
+			Content: fmt.Sprintf("Tool '%s' returned: %s", result.ID, result.Content),
 		})
 	}
 
-	// Create a detailed prompt that provides context about the tool results
-	analysisPrompt := fmt.Sprintf(`You are a helpful AI assistant. The user asked: "%s"
-
-Here are the results from the tools I used to help answer their question:
-
-%s
-
-Please provide a helpful response that:
-1. Directly answers the user's question using the tool results
-2. If the results are from a file or directory listing, summarize the key contents
-3. If there were any errors, explain what went wrong and how to fix it
-4. Suggest any next steps or additional information that might be helpful
-
-Keep your response focused on answering the user's specific question using the tool results provided.`, lastUserMessage, toolResultsSummary)
-
-	// Continue the conversation with the detailed prompt
-	messages = append(messages, Message{
-		Role:    "user",
-		Content: analysisPrompt,
-	})
-
-	// Continue the conversation
+	// Continue the conversation with all tools available
 	return c.Chat(ctx, messages, nil)
 } 
