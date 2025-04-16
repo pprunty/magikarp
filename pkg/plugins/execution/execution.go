@@ -1,7 +1,6 @@
 package execution
 
 import (
-	"encoding/json"
 	"fmt"
 	"os/exec"
 
@@ -9,47 +8,38 @@ import (
 )
 
 // ExecutionPlugin implements the Plugin interface for code execution
-type ExecutionPlugin struct{}
+type ExecutionPlugin struct {
+	*agent.BasePlugin
+}
 
 // New creates a new ExecutionPlugin instance
 func New() *ExecutionPlugin {
-	return &ExecutionPlugin{}
-}
-
-// Name returns the name of the plugin
-func (p *ExecutionPlugin) Name() string {
-	return "execution"
-}
-
-// Description returns a description of what the plugin does
-func (p *ExecutionPlugin) Description() string {
-	return "Provides tools for executing code and commands"
-}
-
-// Tools returns the tools provided by this plugin
-func (p *ExecutionPlugin) Tools() []agent.ToolDefinition {
-	return []agent.ToolDefinition{
-		executeCommandTool(),
-		listToolsTool(),
+	plugin := &ExecutionPlugin{
+		BasePlugin: agent.NewBasePlugin("execution", "Provides tools for executing code and commands"),
 	}
+
+	// Add tools during initialization
+	plugin.AddTool("execute_command", "Execute a shell command and return its output. Use this to run code or system commands.",
+		agent.GenerateSchema[ExecuteCommandInput](),
+		plugin.executeCommand)
+
+	plugin.AddTool("list_tools", "List all available tools and their descriptions",
+		agent.GenerateSchema[struct{}](),
+		plugin.listTools)
+
+	return plugin
 }
 
-func executeCommandTool() agent.ToolDefinition {
-	return agent.ToolDefinition{
-		Name:        "execute_command",
-		Description: "Execute a shell command and return its output. Use this to run code or system commands.",
-		InputSchema: agent.GenerateSchema[ExecuteCommandInput](),
-		Function:    executeCommand,
-	}
+// Initialize is called when the plugin is loaded
+func (p *ExecutionPlugin) Initialize() error {
+	// Any initialization code can go here
+	return nil
 }
 
-func listToolsTool() agent.ToolDefinition {
-	return agent.ToolDefinition{
-		Name:        "list_tools",
-		Description: "List all available tools and their descriptions",
-		InputSchema: agent.GenerateSchema[struct{}](),
-		Function:    listTools,
-	}
+// Cleanup is called when the plugin is unloaded
+func (p *ExecutionPlugin) Cleanup() error {
+	// Any cleanup code can go here
+	return nil
 }
 
 type ExecuteCommandInput struct {
@@ -57,23 +47,34 @@ type ExecuteCommandInput struct {
 	Args    []string `json:"args,omitempty" jsonschema_description:"Optional arguments to pass to the command"`
 }
 
-func executeCommand(input []byte) (string, error) {
-	executeInput := ExecuteCommandInput{}
-	err := json.Unmarshal(input, &executeInput)
-	if err != nil {
+func (p *ExecutionPlugin) executeCommand(input []byte) (string, error) {
+	var toolInput agent.ToolInput
+	toolInput.Data = input
+
+	var executeInput ExecuteCommandInput
+	if err := toolInput.UnmarshalInput(&executeInput); err != nil {
 		return "", err
 	}
 
 	cmd := exec.Command(executeInput.Command, executeInput.Args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("command failed: %w\nOutput: %s", err, output)
+		return agent.NewToolResult(false, fmt.Sprintf("Command failed: %v\nOutput: %s", err, output), nil).ToJSON()
 	}
 
-	return string(output), nil
+	return agent.NewToolResult(true, "Command executed successfully", string(output)).ToJSON()
 }
 
-func listTools(input []byte) (string, error) {
+func (p *ExecutionPlugin) listTools(input []byte) (string, error) {
+	var toolInput agent.ToolInput
+	toolInput.Data = input
+
+	// Unmarshal empty struct to validate input
+	var empty struct{}
+	if err := toolInput.UnmarshalInput(&empty); err != nil {
+		return "", err
+	}
+
 	plugins := []struct {
 		Name        string
 		Description string
@@ -135,10 +136,5 @@ func listTools(input []byte) (string, error) {
 		},
 	}
 
-	result, err := json.MarshalIndent(plugins, "", "  ")
-	if err != nil {
-		return "", err
-	}
-
-	return string(result), nil
+	return agent.NewToolResult(true, "Tools listed successfully", plugins).ToJSON()
 } 

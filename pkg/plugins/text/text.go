@@ -1,58 +1,58 @@
 package text
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/pprunty/magikarp/pkg/agent"
 )
 
 // TextPlugin implements the Plugin interface for text manipulation
-type TextPlugin struct{}
+type TextPlugin struct {
+	*agent.BasePlugin
+}
 
 // New creates a new TextPlugin instance
 func New() *TextPlugin {
-	return &TextPlugin{}
-}
-
-// Name returns the name of the plugin
-func (p *TextPlugin) Name() string {
-	return "text"
-}
-
-// Description returns a description of what the plugin does
-func (p *TextPlugin) Description() string {
-	return "Provides tools for text manipulation and transformation"
-}
-
-// Tools returns the tools provided by this plugin
-func (p *TextPlugin) Tools() []agent.ToolDefinition {
-	return []agent.ToolDefinition{
-		rot13Tool(),
+	plugin := &TextPlugin{
+		BasePlugin: agent.NewBasePlugin("text", "Provides tools for text manipulation and transformation"),
 	}
+	
+	// Add tools during initialization
+	plugin.AddTool("rot13", "Apply ROT13 transformation to text", 
+		agent.GenerateSchema[Rot13Input](), 
+		plugin.rot13)
+	
+	return plugin
 }
 
-func rot13Tool() agent.ToolDefinition {
-	return agent.ToolDefinition{
-		Name:        "rot13",
-		Description: "Apply ROT13 transformation to text",
-		InputSchema: agent.GenerateSchema[Rot13Input](),
-		Function:    rot13,
-	}
+// Initialize is called when the plugin is loaded
+func (p *TextPlugin) Initialize() error {
+	// Any initialization code can go here
+	return nil
+}
+
+// Cleanup is called when the plugin is unloaded
+func (p *TextPlugin) Cleanup() error {
+	// Any cleanup code can go here
+	return nil
 }
 
 type Rot13Input struct {
 	Text string `json:"text" jsonschema_description:"The text to transform"`
 }
 
-func rot13(input []byte) (string, error) {
-	rot13Input := Rot13Input{}
-	err := json.Unmarshal(input, &rot13Input)
-	if err != nil {
+func (p *TextPlugin) rot13(input []byte) (string, error) {
+	var toolInput agent.ToolInput
+	toolInput.Data = input
+	
+	var rot13Input Rot13Input
+	if err := toolInput.UnmarshalInput(&rot13Input); err != nil {
 		return "", err
 	}
 
-	return rot13Transform(rot13Input.Text), nil
+	transformed := rot13Transform(rot13Input.Text)
+	result := agent.NewToolResult(true, "Text transformed successfully", transformed)
+	return result.ToJSON()
 }
 
 func rot13Transform(text string) string {

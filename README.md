@@ -1,6 +1,12 @@
 # magikarp
 
-A flexible plugin-based agent framework built with Go. magikarp provides a foundation for building AI-powered agents that can interact with various tools and services through a plugin architecture.
+A flexible plugin-based agentic LLM framework built with Go. Magikarp provides a foundation for building AI-powered agents 
+that can interact with the user using "tools"—custom code which the agent knows how to execute to help complete their task. 
+
+These tools form the basis for the plugin system. 
+
+A plugin is nothing but a "tool", where the tool is a predefined 
+block of code the agent knows how to execute, such as `read_file`, `edit_file`, `execute_command`, `trigger_api`, etc.
 
 ![shiny_magikarp.png](assets/shiny_magikarp.png)
 
