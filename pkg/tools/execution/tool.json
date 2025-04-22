@@ -1,0 +1,85 @@
+{
+  "name": "execution",
+  "description": "Tools for executing commands and code",
+  "language": "go",
+  "entrypoint": "execution.go",
+  "tools": [
+    {
+      "name": "execute_command",
+      "description": "Execute a shell command and return its output. Use this to run code or system commands.",
+      "inputs": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "description": "The command to execute"
+          },
+          "args": {
+            "type": "array",
+            "description": "Optional arguments to pass to the command",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["command"],
+        "type": "object"
+      },
+      "outputs": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result of the operation."
+          },
+          "output": {
+            "type": "string",
+            "description": "The command output if successful."
+          }
+        },
+        "required": ["success", "message"],
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_tools",
+      "description": "List all available tools and their descriptions",
+      "inputs": {
+        "type": "object"
+      },
+      "outputs": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result of the operation."
+          },
+          "tools": {
+            "type": "array",
+            "description": "The list of available tools if successful.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the tool."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The description of the tool."
+                }
+              }
+            }
+          }
+        },
+        "required": ["success", "message"],
+        "type": "object"
+      }
+    }
+  ]
+} 

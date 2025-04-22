@@ -1,0 +1,7 @@
+{
+  "name": "coding_agent",
+  "description": "Writes and refactors source code",
+  "tools": ["filesystem", "execution"],
+  "model": "gpt-4",
+  "strategy": "react"
+} 

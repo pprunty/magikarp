@@ -1,13 +1,9 @@
-.PHONY: install build run test clean lint download-model ollama help
+.PHONY: all clean build test mgk
 
 # Go parameters
-GOCMD=go
-GOBUILD=$(GOCMD) build
-GOCLEAN=$(GOCMD) clean
-GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
-GOMOD=$(GOCMD) mod
-BINARY_NAME=magikarp
+GO := go
+BINARY_NAME := magikarp
+CLI_BINARY_NAME := mgk
 
 # Build flags
 LDFLAGS=-ldflags "-s -w"
@@ -15,31 +11,46 @@ LDFLAGS=-ldflags "-s -w"
 # Default target
 .DEFAULT_GOAL := run
 
-all: install build
+all: clean build
 
-install:
-	$(GOMOD) tidy
+build: build-lib build-cli
 
-build:
-	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME)
+build-lib:
+	$(GO) build -o $(BINARY_NAME) main.go
 
-run: install build
-	@echo "\033[1;32mStarting Magikarp...\033[0m"
-	./$(BINARY_NAME)
-
-test:
-	$(GOTEST) -v ./...
+build-cli:
+	$(GO) build -o $(CLI_BINARY_NAME) ./cmd/mgk
 
 clean:
-	$(GOCLEAN)
-	rm -f $(BINARY_NAME)
+	rm -f $(BINARY_NAME) $(CLI_BINARY_NAME)
 
-lint:
-	golangci-lint run
+test:
+	$(GO) test ./...
+
+mgk: build-cli
+	./$(CLI_BINARY_NAME)
+
+# Build and install the CLI to the Go binary directory
+install-cli: build-cli
+	cp $(CLI_BINARY_NAME) $(GOPATH)/bin/
+
+# Helper targets for tool and agent creation
+create-tool:
+	@test -n "$(NAME)" || (echo "NAME is not set. Usage: make create-tool NAME=mytool"; exit 1)
+	./$(CLI_BINARY_NAME) create tool $(NAME)
+
+create-agent:
+	@test -n "$(NAME)" || (echo "NAME is not set. Usage: make create-agent NAME=myagent"; exit 1)
+	./$(CLI_BINARY_NAME) create agent $(NAME)
+
+# Run an agent
+run-agent:
+	@test -n "$(NAME)" || (echo "NAME is not set. Usage: make run-agent NAME=myagent"; exit 1)
+	./$(CLI_BINARY_NAME) run $(NAME)
 
 # Development tools
 tools:
-	$(GOGET) github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	$(GO) get github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Download model
 download-model:

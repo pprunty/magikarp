@@ -1,0 +1,110 @@
+{
+  "name": "filesystem",
+  "description": "Tools for interacting with the filesystem",
+  "language": "go",
+  "entrypoint": "filesystem.go",
+  "tools": [
+    {
+      "name": "read_file",
+      "description": "Read the contents of a given relative file path. Use this when you want to see what's inside a file.",
+      "inputs": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The relative path of a file in the working directory."
+          }
+        },
+        "required": ["path"],
+        "type": "object"
+      },
+      "outputs": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result of the operation."
+          },
+          "content": {
+            "type": "string",
+            "description": "The content of the file if successful."
+          }
+        },
+        "required": ["success", "message"],
+        "type": "object"
+      }
+    },
+    {
+      "name": "list_files",
+      "description": "List files and directories at a given path. If no path is provided, lists files in the current directory.",
+      "inputs": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Optional relative path to list files from. Defaults to current directory if not provided."
+          }
+        },
+        "type": "object"
+      },
+      "outputs": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result of the operation."
+          },
+          "files": {
+            "type": "array",
+            "description": "The list of files and directories if successful.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["success", "message"],
+        "type": "object"
+      }
+    },
+    {
+      "name": "edit_file",
+      "description": "Make edits to a text file. Replaces 'old_str' with 'new_str' in the given file.",
+      "inputs": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The path to the file"
+          },
+          "old_str": {
+            "type": "string",
+            "description": "Text to search for - must match exactly and must only have one match exactly"
+          },
+          "new_str": {
+            "type": "string",
+            "description": "Text to replace old_str with"
+          }
+        },
+        "required": ["path"],
+        "type": "object"
+      },
+      "outputs": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result of the operation."
+          }
+        },
+        "required": ["success", "message"],
+        "type": "object"
+      }
+    }
+  ]
+} 

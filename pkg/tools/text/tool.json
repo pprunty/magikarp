@@ -1,0 +1,40 @@
+{
+  "name": "text",
+  "description": "Tools for text manipulation and transformation",
+  "language": "go",
+  "entrypoint": "rot13.go",
+  "tools": [
+    {
+      "name": "rot13",
+      "description": "Apply ROT13 transformation to text",
+      "inputs": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The text to transform"
+          }
+        },
+        "required": ["text"],
+        "type": "object"
+      },
+      "outputs": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the operation was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "A message describing the result of the operation."
+          },
+          "result": {
+            "type": "string",
+            "description": "The transformed text if successful."
+          }
+        },
+        "required": ["success", "message"],
+        "type": "object"
+      }
+    }
+  ]
+} 
