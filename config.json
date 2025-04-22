@@ -1,0 +1,57 @@
+{
+  "providers": {
+    "auto": {
+      "name": "Auto (Smart Model Selection)",
+      "required": false,
+      "models": []
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "required": false,
+      "models": [
+        {
+          "name": "claude-3-opus",
+          "description": "Most capable model for highly complex tasks"
+        },
+        {
+          "name": "claude-3-sonnet",
+          "description": "Balanced model for most tasks"
+        }
+      ]
+    },
+    "openai": {
+      "name": "OpenAI",
+      "required": false,
+      "models": [
+        {
+          "name": "gpt-4",
+          "description": "Most capable model for complex tasks"
+        },
+        {
+          "name": "gpt-3.5-turbo",
+          "description": "Fast and efficient model for most tasks"
+        }
+      ]
+    },
+    "gemini": {
+      "name": "Google Gemini",
+      "required": false,
+      "models": [
+        {
+          "name": "gemini-pro",
+          "description": "Most capable Gemini model"
+        }
+      ]
+    },
+    "ollama": {
+      "name": "Ollama",
+      "required": false,
+      "models": [
+        {
+          "name": "llama3.2",
+          "description": "Local Llama 3.2 model"
+        }
+      ]
+    }
+  }
+} 

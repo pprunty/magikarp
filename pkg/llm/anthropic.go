@@ -11,10 +11,11 @@ import (
 // AnthropicClient implements the Client interface for Anthropic
 type AnthropicClient struct {
 	client *anthropic.Client
+	model  string
 }
 
 // NewAnthropicClient creates a new Anthropic client
-func NewAnthropicClient(configPath string) (*AnthropicClient, error) {
+func NewAnthropicClient(model string, configPath string) (*AnthropicClient, error) {
 	// Check if API key is set
 	if os.Getenv("ANTHROPIC_API_KEY") == "" {
 		return nil, fmt.Errorf("ANTHROPIC_API_KEY environment variable is not set")
@@ -23,7 +24,13 @@ func NewAnthropicClient(configPath string) (*AnthropicClient, error) {
 	client := anthropic.NewClient()
 	return &AnthropicClient{
 		client: &client,
+		model:  model,
 	}, nil
+}
+
+// Name returns the name of the LLM
+func (c *AnthropicClient) Name() string {
+	return c.model
 }
 
 // Chat sends a message to Anthropic and returns its response
@@ -57,7 +64,7 @@ func (c *AnthropicClient) Chat(ctx context.Context, messages []Message, tools []
 
 	// Send request to Anthropic
 	message, err := c.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.ModelClaude3_7SonnetLatest,
+		Model:     anthropic.Model(c.model),
 		MaxTokens: int64(1024),
 		Messages:  anthropicMessages,
 		Tools:     anthropicTools,
@@ -114,9 +121,4 @@ func (c *AnthropicClient) SendToolResult(ctx context.Context, messages []Message
 
 	// Continue the conversation
 	return c.Chat(ctx, messages, nil)
-}
-
-// Name returns the name of the LLM
-func (c *AnthropicClient) Name() string {
-	return "Claude"
 }

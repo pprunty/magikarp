@@ -1,14 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/pprunty/magikarp/pkg/agent"
+	"github.com/pprunty/magikarp/pkg/config"
+	"github.com/pprunty/magikarp/pkg/history"
 	"github.com/pprunty/magikarp/pkg/llm"
 	"github.com/pprunty/magikarp/pkg/plugins/execution"
 	"github.com/pprunty/magikarp/pkg/plugins/filesystem"
@@ -263,34 +265,192 @@ func prettyPrintJSON(content string) string {
 	return string(pretty)
 }
 
+// ProviderOption represents a selectable provider option
+type ProviderOption struct {
+	ID       string
+	Name     string
+	Required bool
+}
+
+// ModelOption represents a selectable model option
+type ModelOption struct {
+	Name        string
+	Description string
+}
+
 func main() {
-	// Try to create Anthropic client first
-	var client llm.Client
-	var err error
-	
-	client, err = llm.NewAnthropicClient("tools.json")
+	// Load configuration
+	cfg, err := config.LoadConfig("config.json")
 	if err != nil {
-		fmt.Printf("Note: %v\n", err)
-		fmt.Println("Falling back to Ollama with llama3.2 model...")
-		fmt.Println("Make sure Ollama server is running with 'make ollama' in a separate terminal")
-		// Create Ollama client with model as fallback
-		client, err = llm.NewOllamaClient("llama3.2", "tools.json")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating Ollama client: %v\n", err)
-			client, err = llm.NewOllamaClient("llama3.2", "tools.json")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating fallback Ollama client: %v\n", err)
-				os.Exit(1)
-			}
-		}
+		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		os.Exit(1)
 	}
 
-	scanner := bufio.NewScanner(os.Stdin)
+	// Create provider options
+	var providerOptions []ProviderOption
+	
+	// Add auto first
+	if autoProvider, ok := cfg.Providers["auto"]; ok {
+		providerOptions = append(providerOptions, ProviderOption{
+			ID:       "auto",
+			Name:     autoProvider.Name,
+			Required: autoProvider.Required,
+		})
+	}
+	
+	// Add other providers in order (excluding auto and ollama)
+	providerOrder := []string{"anthropic", "openai", "gemini"}
+	for _, id := range providerOrder {
+		if provider, ok := cfg.Providers[id]; ok {
+			providerOptions = append(providerOptions, ProviderOption{
+				ID:       id,
+				Name:     provider.Name,
+				Required: provider.Required,
+			})
+		}
+	}
+	
+	// Add ollama last
+	if ollamaProvider, ok := cfg.Providers["ollama"]; ok {
+		providerOptions = append(providerOptions, ProviderOption{
+			ID:       "ollama",
+			Name:     ollamaProvider.Name,
+			Required: ollamaProvider.Required,
+		})
+	}
+
+	// Create provider selection prompt
+	providerPrompt := promptui.Select{
+		Label: "Select LLM Provider (use backspace to go back)",
+		Items: providerOptions,
+		Templates: &promptui.SelectTemplates{
+			Label:    "{{ . }}",
+			Active:   "→ {{ .Name | cyan }}",
+			Inactive: "  {{ .Name | white }}",
+			Selected: "✓ {{ .Name | green }}",
+			Details: `
+--------- Provider Details ----------
+{{ "Name:" | faint }}	{{ .Name }}
+{{ "Required:" | faint }}	{{ if .Required }}Yes{{ else }}No{{ end }}`,
+		},
+		Keys: &promptui.SelectKeys{
+			Prev:     promptui.Key{Code: promptui.KeyPrev, Display: "↑"},
+			Next:     promptui.Key{Code: promptui.KeyNext, Display: "↓"},
+			PageUp:   promptui.Key{Code: promptui.KeyBackspace, Display: "←"},
+			PageDown: promptui.Key{Code: promptui.KeyNext, Display: "→"},
+			Search:   promptui.Key{Code: '/', Display: "/"},
+		},
+	}
+
+	// Run provider selection
+	providerIndex, _, err := providerPrompt.Run()
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return
+	}
+
+	selectedProvider := providerOptions[providerIndex]
+	provider, err := cfg.GetProvider(selectedProvider.ID)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting provider: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Skip model selection for auto provider
+	var client llm.Client
+	var result any
+
+	if selectedProvider.ID == "auto" {
+		// Get all available models from all providers
+		var allModels []string
+		for _, provider := range cfg.Providers {
+			for _, model := range provider.Models {
+				allModels = append(allModels, model.Name)
+			}
+		}
+		result, err = llm.NewAutoClient(allModels, "tools.json")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating auto client: %v\n", err)
+			os.Exit(1)
+		}
+		client = result.(llm.Client)
+	} else {
+		// Create model options
+		var modelOptions []ModelOption
+		for _, model := range provider.Models {
+			modelOptions = append(modelOptions, ModelOption{
+				Name:        model.Name,
+				Description: model.Description,
+			})
+		}
+
+		// Create model selection prompt
+		modelPrompt := promptui.Select{
+			Label: fmt.Sprintf("Select %s Model (use backspace to go back)", provider.Name),
+			Items: modelOptions,
+			Templates: &promptui.SelectTemplates{
+				Label:    "{{ . }}",
+				Active:   "→ {{ .Name | cyan }} ({{ .Description | yellow }})",
+				Inactive: "  {{ .Name | white }} ({{ .Description | yellow }})",
+				Selected: "✓ {{ .Name | green }} ({{ .Description | yellow }})",
+			},
+			Keys: &promptui.SelectKeys{
+				Prev:     promptui.Key{Code: promptui.KeyPrev, Display: "↑"},
+				Next:     promptui.Key{Code: promptui.KeyNext, Display: "↓"},
+				PageUp:   promptui.Key{Code: promptui.KeyBackspace, Display: "←"},
+				PageDown: promptui.Key{Code: promptui.KeyNext, Display: "→"},
+				Search:   promptui.Key{Code: '/', Display: "/"},
+			},
+		}
+
+		// Run model selection
+		modelIndex, _, err := modelPrompt.Run()
+		if err != nil {
+			fmt.Printf("Prompt failed %v\n", err)
+			return
+		}
+
+		selectedModel := modelOptions[modelIndex]
+		fmt.Printf("You selected %s (%s)\n", provider.Name, selectedModel.Name)
+
+		// Create the selected LLM client
+		switch selectedProvider.ID {
+		case "anthropic":
+			result, err = llm.NewAnthropicClient(selectedModel.Name, "tools.json")
+		case "openai":
+			result, err = llm.NewOpenAIClient(selectedModel.Name, "tools.json")
+		case "gemini":
+			result, err = llm.NewGeminiClient(selectedModel.Name, "tools.json")
+		case "ollama":
+			result, err = llm.NewOllamaClient(selectedModel.Name, "tools.json")
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown provider: %s\n", selectedProvider.ID)
+			os.Exit(1)
+		}
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating %s client: %v\n", provider.Name, err)
+			os.Exit(1)
+		}
+
+		// Type assert the result to llm.Client
+		client = result.(llm.Client)
+	}
+
+	// Setup history manager
+	hist, err := history.NewHistoryManager()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error setting up command history: %v\n", err)
+		os.Exit(1)
+	}
+	defer hist.Close()
+
 	getUserMessage := func() (string, bool) {
-		if !scanner.Scan() {
+		line, err := hist.ReadLine()
+		if err != nil {
 			return "", false
 		}
-		return scanner.Text(), true
+		return strings.TrimSpace(line), true
 	}
 
 	plugins := []agent.Plugin{

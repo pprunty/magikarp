@@ -48,6 +48,77 @@ Run the agent:
 make run
 ```
 
+## Model Selection
+
+magikarp supports multiple LLM providers and models. When you start the application, you'll be presented with a selection menu to choose your preferred provider and model.
+
+### Available Providers
+
+1. **Auto (Smart Model Selection)**
+   - Automatically selects the best model based on the task
+   - No configuration required
+
+2. **Anthropic (Claude)**
+   - Requires `ANTHROPIC_API_KEY` environment variable
+   - Models:
+     - `claude-3-opus`: Most capable model for highly complex tasks
+     - `claude-3-sonnet`: Balanced model for most tasks
+
+3. **OpenAI**
+   - Requires `OPENAI_API_KEY` environment variable
+   - Models:
+     - `gpt-4`: Most capable model for complex tasks
+     - `gpt-3.5-turbo`: Fast and efficient model for most tasks
+
+4. **Google Gemini**
+   - Requires `GEMINI_API_KEY` environment variable
+   - Models:
+     - `gemini-pro`: Most capable Gemini model
+
+5. **Ollama**
+   - Local model running on your machine
+   - Models:
+     - `llama3.2`: Local Llama 3.2 model
+   - Setup Instructions:
+     1. Install Ollama:
+        - macOS: `brew install ollama`
+        - Linux: `curl -fsSL https://ollama.com/install.sh | sh`
+        - Windows: Download from [Ollama website](https://ollama.com/download)
+     2. Start the Ollama server:
+        ```bash
+        ollama serve
+        ```
+     3. Pull the model you want to use:
+        ```bash
+        ollama pull llama3.2
+        ```
+     4. Verify the model is available:
+        ```bash
+        ollama list
+        ```
+   - Documentation:
+     - [Ollama Documentation](https://github.com/ollama/ollama/blob/main/docs/README.md)
+     - [Available Models](https://github.com/ollama/ollama/blob/main/docs/models.md)
+     - [API Documentation](https://github.com/ollama/ollama/blob/main/docs/api.md)
+
+### Selecting a Model
+
+1. Start the application:
+   ```bash
+   make run
+   ```
+
+2. Use the arrow keys to navigate through the provider list
+   - Press `↑` or `↓` to move between options
+   - Press `←` to go back to previous menu
+   - Press `/` to search
+
+3. After selecting a provider, choose your preferred model
+   - Each model includes a description of its capabilities
+   - The selection menu shows both model name and description
+
+4. For API-based providers (Anthropic, OpenAI, Gemini), ensure you have set the required environment variables before starting the application.
+
 ## Tool Configuration
 
 magikarp uses a `tools.json` file to configure tool behavior and trigger keywords. This file defines how tools are presented to the LLM and when they should be used.
@@ -159,33 +230,117 @@ magikarp's plugin architecture makes it easy to add new capabilities. To create 
        Name() string
        Description() string
        Tools() []ToolDefinition
+       Initialize() error
+       Cleanup() error
    }
    ```
-3. Register your plugin in `main.go`
+
+3. Use the `BasePlugin` for common functionality:
+   ```go
+   type YourPlugin struct {
+       *BasePlugin
+   }
+
+   func New() *YourPlugin {
+       return &YourPlugin{
+           BasePlugin: NewBasePlugin("your-plugin", "Description of what your plugin does"),
+       }
+   }
+   ```
+
+4. Add tools in the `Initialize` method:
+   ```go
+   func (p *YourPlugin) Initialize() error {
+       p.AddTool("tool_name", "Description of the tool", 
+           map[string]interface{}{
+               "type": "object",
+               "properties": {
+                   "input": {
+                       "type": "string",
+                       "description": "Tool input"
+                   }
+               }
+           },
+           func(input []byte) (string, error) {
+               result := NewToolResult(true, "Success", data)
+               return result.ToJSON()
+           })
+       return nil
+   }
+   ```
+
+5. Register your plugin in `main.go`
 
 Example plugin structure:
 ```go
 package yourplugin
 
-type YourPlugin struct{}
+type YourPlugin struct {
+    *BasePlugin
+}
 
 func New() *YourPlugin {
-    return &YourPlugin{}
-}
-
-func (p *YourPlugin) Name() string {
-    return "your-plugin"
-}
-
-func (p *YourPlugin) Description() string {
-    return "Description of what your plugin does"
-}
-
-func (p *YourPlugin) Tools() []agent.ToolDefinition {
-    return []agent.ToolDefinition{
-        // Define your tools here
+    return &YourPlugin{
+        BasePlugin: NewBasePlugin("your-plugin", "Description of what your plugin does"),
     }
 }
+
+func (p *YourPlugin) Initialize() error {
+    p.AddTool("example_tool", "Example tool description",
+        map[string]interface{}{
+            "type": "object",
+            "properties": {
+                "input": {
+                    "type": "string",
+                    "description": "Example input"
+                }
+            }
+        },
+        func(input []byte) (string, error) {
+            var data struct {
+                Input string `json:"input"`
+            }
+            if err := json.Unmarshal(input, &data); err != nil {
+                return "", err
+            }
+            result := NewToolResult(true, "Processed successfully", data.Input)
+            return result.ToJSON()
+        })
+    return nil
+}
+
+func (p *YourPlugin) Cleanup() error {
+    return nil
+}
+```
+
+### Tool Definition
+
+Each tool must implement the `ToolDefinition` interface:
+```go
+type ToolDefinition struct {
+    Name        string                 // Name of the tool
+    Description string                 // Description of what the tool does
+    InputSchema map[string]interface{} // JSON schema for tool input
+    Function    func(input []byte) (string, error) // Tool implementation
+}
+```
+
+### Tool Results
+
+Tools should return results using the `ToolResult` struct:
+```go
+type ToolResult struct {
+    Success bool        // Whether the tool execution was successful
+    Message string      // Status message
+    Data    interface{} // Result data
+}
+```
+
+Use `NewToolResult` to create results and `ToJSON` to convert them to JSON:
+```go
+result := NewToolResult(true, "Operation successful", data)
+jsonResult, err := result.ToJSON()
 ```
 
 ### Available Commands
@@ -204,6 +359,12 @@ func (p *YourPlugin) Tools() []agent.ToolDefinition {
 magikarp/
 ├── pkg/
 │   ├── agent/         # Core agent implementation
+│   ├── llm/           # LLM provider implementations
+│   │   ├── anthropic.go  # Anthropic (Claude) client
+│   │   ├── auto.go       # Auto model selection client
+│   │   ├── gemini.go     # Google Gemini client
+│   │   ├── ollama.go     # Ollama local model client
+│   │   └── openai.go     # OpenAI client
 │   ├── plugins/       # Plugin implementations
 │   │   ├── execution/ # Command execution plugin
 │   │   ├── filesystem/# File system operations plugin
