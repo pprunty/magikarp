@@ -5,12 +5,9 @@ import (
     "context"
     "encoding/json"
     "fmt"
-    "image"
-    "image/jpeg"
-    "image/png"
     "os"
+    "os/exec"
     "path/filepath"
-    "strings"
 
     "github.com/pprunty/magikarp/pkg/agent"
 )
@@ -18,60 +15,111 @@ import (
 //go:embed tool.json
 var schema []byte
 
+// Input represents the parameters for the convert_image tool
 type input struct {
-    Src string `json:"src"`
-    Dst string `json:"dst"`
+    Src     string `json:"src"`
+    Dst     string `json:"dst"`
+    Quality int    `json:"quality,omitempty"`
+    Resize  string `json:"resize,omitempty"`
 }
 
+// Definition returns the tool definition for the convert_image tool
 func Definition() agent.ToolDefinition {
     var sch map[string]interface{}
-    _ = json.Unmarshal(schema, &sch)
+    if err := json.Unmarshal(schema, &sch); err != nil {
+        fmt.Printf("Error unmarshaling schema: %v\n", err)
+    }
     return agent.ToolDefinition{
         Name:        "convert_image",
-        Description: "Convert an image between PNG and JPEG",
+        Description: "Convert an image between various formats including PNG, JPEG, WEBP, HEIC, TIFF, BMP, and GIF",
         InputSchema: sch,
         Function:    run,
     }
 }
 
+// run executes the image conversion
 func run(ctx context.Context, inputData map[string]interface{}) (*agent.ToolResult, error) {
+    // Parse input parameters
     var in input
     inputBytes, err := json.Marshal(inputData)
     if err != nil {
-        return agent.NewToolResult("convert_image", err.Error(), true), nil
+        return agent.NewToolResult("convert_image", fmt.Sprintf("Error processing input: %v", err), true), nil
     }
 
     if err := json.Unmarshal(inputBytes, &in); err != nil {
-        return agent.NewToolResult("convert_image", err.Error(), true), nil
+        return agent.NewToolResult("convert_image", fmt.Sprintf("Error parsing input: %v", err), true), nil
     }
 
-    file, err := os.Open(in.Src)
-    if err != nil {
-        return agent.NewToolResult("convert_image", err.Error(), true), nil
-    }
-    defer file.Close()
-
-    img, _, err := image.Decode(file)
-    if err != nil {
-        return agent.NewToolResult("convert_image", err.Error(), true), nil
+    // Validate input
+    if in.Src == "" || in.Dst == "" {
+        return agent.NewToolResult("convert_image", "Source and destination paths are required", true), nil
     }
 
-    out, err := os.Create(in.Dst)
-    if err != nil {
-        return agent.NewToolResult("convert_image", err.Error(), true), nil
+    // Ensure paths are valid
+    if !filepath.IsAbs(in.Src) {
+        in.Src = filepath.Clean(in.Src)
     }
-    defer out.Close()
+    if !filepath.IsAbs(in.Dst) {
+        in.Dst = filepath.Clean(in.Dst)
+    }
 
-    switch strings.ToLower(filepath.Ext(in.Dst)) {
-    case ".png":
-        err = png.Encode(out, img)
-    case ".jpg", ".jpeg":
-        err = jpeg.Encode(out, img, &jpeg.Options{Quality: 92})
-    default:
-        err = fmt.Errorf("unsupported destination format")
+    // Set default quality if not specified
+    if in.Quality <= 0 {
+        in.Quality = 95 // High quality default
     }
+
+    // Create destination directory if it doesn't exist
+    dstDir := filepath.Dir(in.Dst)
+    if err := os.MkdirAll(dstDir, 0755); err != nil {
+        return agent.NewToolResult("convert_image", fmt.Sprintf("Failed to create destination directory: %v", err), true), nil
+    }
+
+    // Check if ImageMagick is installed
+    _, err = exec.LookPath("convert")
     if err != nil {
-        return agent.NewToolResult("convert_image", err.Error(), true), nil
+        _, err = exec.LookPath("magick")
+        if err != nil {
+            return agent.NewToolResult("convert_image", "ImageMagick is not installed (required for image conversion)", true), nil
+        }
     }
-    return agent.NewToolResult("convert_image", "image converted", false), nil
+
+    // Build the ImageMagick command
+    var args []string
+
+    // Check which command is available (newer versions use "magick convert", older just "convert")
+    magickCmd := "convert"
+    if _, err := exec.LookPath("magick"); err == nil {
+        magickCmd = "magick"
+        args = append(args, "convert")
+    }
+
+    // Add source file
+    args = append(args, in.Src)
+
+    // Add quality parameter for lossy formats
+    if in.Quality > 0 {
+        args = append(args, "-quality", fmt.Sprintf("%d", in.Quality))
+    }
+
+    // Add resize parameter if specified
+    if in.Resize != "" {
+        args = append(args, "-resize", in.Resize)
+    }
+
+    // Add destination file
+    args = append(args, in.Dst)
+
+    // Execute the command
+    cmd := exec.CommandContext(ctx, magickCmd, args...)
+    output, err := cmd.CombinedOutput()
+    if err != nil {
+        return agent.NewToolResult("convert_image",
+            fmt.Sprintf("Conversion failed: %v\nOutput: %s", err, string(output)),
+            true), nil
+    }
+
+    return agent.NewToolResult("convert_image",
+        fmt.Sprintf("Successfully converted image from %s to %s",
+            filepath.Ext(in.Src), filepath.Ext(in.Dst)),
+        false), nil
 }

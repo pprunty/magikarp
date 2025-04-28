@@ -1,20 +1,54 @@
 {
   "name": "convert_image",
-  "description": "Convert an image file to PNG or JPEG.",
+  "description": "Converts images between various formats using ImageMagick. Supports all major image formats including PNG, JPEG, WEBP, HEIC, TIFF, BMP, and GIF. This tool preserves image quality by default (95% for lossy formats) unless a specific quality level is requested. It can convert HEIC photos (from iPhones) to web-friendly formats like WEBP and PNG. The tool requires ImageMagick to be installed on the system.",
   "input_schema": {
     "type": "object",
     "properties": {
       "src": {
-        "type": "string"
+        "type": "string",
+        "description": "Path to the source image file to be converted. Both absolute and relative paths are supported."
       },
       "dst": {
-        "type": "string"
+        "type": "string",
+        "description": "Path where the converted image should be saved. The destination format is determined by the file extension (e.g., .png, .jpg, .webp)."
+      },
+      "quality": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100,
+        "description": "Optional quality setting for lossy formats like JPEG and WEBP. Range is 1-100, where 100 is highest quality. Default is 95 for high quality."
+      },
+      "resize": {
+        "type": "string",
+        "description": "Optional resizing dimensions using ImageMagick syntax, e.g., '800x600', '50%', or '800x600>'. The '>' operator only shrinks images larger than the specified dimensions."
       }
     },
     "required": [
       "src",
       "dst"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "examples": [
+      {
+        "src": "photo.heic",
+        "dst": "photo.webp"
+      },
+      {
+        "src": "image.png",
+        "dst": "image.jpg",
+        "quality": 85
+      },
+      {
+        "src": "large_photo.jpg",
+        "dst": "thumbnail.png",
+        "resize": "300x300>"
+      },
+      {
+        "src": "screenshot.png",
+        "dst": "compressed.webp",
+        "quality": 80,
+        "resize": "1200x900"
+      }
+    ]
   }
 }

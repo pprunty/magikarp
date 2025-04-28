@@ -1,14 +1,66 @@
 {
   "name": "list_files",
-  "description": "List files and directories at a given path (defaults to current directory)",
+  "description": "Lists files and directories under a specified path. This tool recursively traverses directory structures to provide a comprehensive listing of files and directories, supporting customizable depth levels, filters for hidden files, and pagination through max_entries. The tool returns detailed information for each entry including the path and type (file or directory), with optional statistics like file size and modification time. Use this tool when you need to explore directory contents, search for specific files using patterns, or understand the structure of a file system. Results are returned as structured JSON with both the file entries and summary statistics. For security reasons, only local file paths are allowed.",
   "input_schema": {
     "type": "object",
     "properties": {
-      "path": { 
+      "path": {
         "type": "string",
-        "description": "Path to list files from (defaults to current directory)"
+        "description": "The base directory path to list files from. Defaults to the current directory ('.') if not specified. Must be a local path."
+      },
+      "depth": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "How many directory levels deep to recurse. Set to 0 for unlimited depth (limited only by max_entries). Default is effectively unlimited, but consider setting a reasonable limit for large directories to avoid timeout issues."
+      },
+      "include_hidden": {
+        "type": "boolean",
+        "description": "Whether to include files and directories that start with a dot (hidden files in Unix-like systems). Defaults to false, meaning hidden files will be excluded unless explicitly requested."
+      },
+      "max_entries": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000,
+        "description": "Maximum number of entries to return in the results. This is a hard cap to prevent excessive memory usage or response sizes. Defaults to 200, with a maximum allowed value of 1000. If the directory contains more entries than this limit, the results will be truncated and marked as such in the summary."
+      },
+      "include_stats": {
+        "type": "boolean",
+        "description": "When true, includes additional statistics for each file/directory such as size in bytes and last modification time. This may slightly reduce performance for very large directories. Defaults to false."
+      },
+      "pattern": {
+        "type": "string",
+        "description": "Optional glob pattern to filter results. Only entries matching the pattern will be included. For example, '*.txt' matches all text files, '*.{jpg,png,gif}' matches common image formats. The pattern applies to the file/directory name, not the full path."
       }
     },
-    "additionalProperties": false
+    "additionalProperties": false,
+    "examples": [
+      {
+        "path": ".",
+        "depth": 1,
+        "max_entries": 100
+      },
+      {
+        "path": "./src",
+        "include_hidden": true,
+        "include_stats": true
+      },
+      {
+        "path": "./documents",
+        "pattern": "*.pdf",
+        "depth": 2
+      },
+      {
+        "path": "./images",
+        "pattern": "*.{jpg,png}",
+        "depth": 0,
+        "max_entries": 500
+      },
+      {
+        "path": ".",
+        "depth": 3,
+        "include_stats": true,
+        "include_hidden": false
+      }
+    ]
   }
-} 
+}

@@ -10,11 +10,11 @@
       "required": false,
       "models": [
         {
-          "name": "claude-3-opus",
+          "name": "claude-3-opus-latest",
           "description": "Most capable model for highly complex tasks"
         },
         {
-          "name": "claude-3-sonnet",
+          "name": "claude-3-5-sonnet-latest",
           "description": "Balanced model for most tasks"
         }
       ]

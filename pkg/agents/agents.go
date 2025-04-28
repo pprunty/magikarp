@@ -1,4 +1,3 @@
-
 package agents
 
 import (
@@ -14,6 +13,7 @@ type Definition struct {
     Name        string   `json:"name"`
     Description string   `json:"description"`
     Plugins     []string `json:"plugins"`
+    SystemPrompt string   `json:"system_prompt,omitempty"` // System prompt to use with this agent
 }
 
 //go:embed */agent.json

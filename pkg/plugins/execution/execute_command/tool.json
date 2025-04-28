@@ -1,13 +1,48 @@
 {
   "name": "execute_command",
-  "description": "Execute a shell command with optional arguments",
+  "description": "Executes a shell command on the local system with optional arguments. This tool runs commands in a controlled manner with timeouts and security restrictions. Use this tool when you need to execute system commands like 'ls', 'cat', 'grep', or other utilities that help gather information or perform operations on the host system. The tool blocks potentially dangerous commands that could damage the system or compromise security. Command execution is always limited by a timeout to prevent long-running operations. Use working directory option when commands need to run in a specific location. Note that this tool CANNOT be used for destructive operations, accessing protected files, changing system configurations, or running privileged commands.",
   "input_schema": {
     "type": "object",
     "properties": {
-      "command": { "type": "string" },
-      "args": { "type": "array", "items": { "type": "string" } }
+      "command": {
+        "type": "string",
+        "description": "The command to execute. Must be a valid executable available on the system path."
+      },
+      "args": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Optional list of arguments to pass to the command. Each array element becomes a separate argument."
+      },
+      "timeout": {
+        "type": "integer",
+        "description": "Optional timeout in seconds. If the command takes longer than this, it will be terminated. Default is 30 seconds, maximum is 300 seconds (5 minutes)."
+      },
+      "work_dir": {
+        "type": "string",
+        "description": "Optional working directory where the command should be executed. If not specified, uses the current working directory."
+      }
     },
     "required": ["command"],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "examples": [
+      {
+        "command": "ls",
+        "args": ["-la", "/tmp"]
+      },
+      {
+        "command": "grep",
+        "args": ["error", "app.log"],
+        "timeout": 60
+      },
+      {
+        "command": "find",
+        "args": [".", "-name", "*.go"],
+        "work_dir": "/home/user/projects"
+      },
+      {
+        "command": "ps",
+        "args": ["aux"]
+      }
+    ]
   }
-} 
+}

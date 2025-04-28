@@ -1,13 +1,14 @@
 {
   "name": "search_text",
-  "description": "Search for text in files or directories",
+  "description": "Find files whose *name* or *contents* contain a pattern (recursive). "
+  "Returns a JSON array of matching file paths.",
   "input_schema": {
     "type": "object",
     "properties": {
-      "path": { "type": "string" },
-      "pattern": { "type": "string" }
+      "path":    { "type": "string",  "description": "Directory or file to search" },
+      "pattern": { "type": "string",  "description": "Substring to look for" }
     },
     "required": ["path", "pattern"],
     "additionalProperties": false
   }
-} 
+}

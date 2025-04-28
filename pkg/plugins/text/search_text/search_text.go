@@ -31,64 +31,63 @@ func Definition() agent.ToolDefinition {
 }
 
 func run(ctx context.Context, inputData map[string]interface{}) (*agent.ToolResult, error) {
-	var in input
-	inputBytes, err := json.Marshal(inputData)
-	if err != nil {
-		return agent.NewToolResult("search_text", err.Error(), true), nil
+	var in struct {
+		Path    string `json:"path"`    // dir or file
+		Pattern string `json:"pattern"` // substring to match
 	}
-
-	if err := json.Unmarshal(inputBytes, &in); err != nil {
-		return agent.NewToolResult("search_text", err.Error(), true), nil
+	if b, err := json.Marshal(inputData); err == nil {
+		_ = json.Unmarshal(b, &in)
 	}
-
 	if in.Path == "" || in.Pattern == "" {
-		return agent.NewToolResult("search_text", "path and pattern are required", true), nil
+		return agent.NewToolResult("search_text",
+			"`path` and `pattern` are required", true), nil
 	}
-
 	if !filepath.IsLocal(in.Path) {
 		return agent.NewToolResult("search_text", "path must be local", true), nil
 	}
 
+	var matches []string
 	info, err := os.Stat(in.Path)
 	if err != nil {
 		return agent.NewToolResult("search_text", err.Error(), true), nil
 	}
 
-	var matches []string
+	searchFile := func(path string, name string) error {
+		// ① match against the *filename* itself
+		if strings.Contains(name, in.Pattern) {
+			matches = append(matches, path)
+			// still fall through to content check for extra hits
+		}
+		// ② match inside file contents (best-effort, ignore binary read errors)
+		if content, err := os.ReadFile(path); err == nil &&
+			strings.Contains(string(content), in.Pattern) {
+			matches = append(matches, path)
+		}
+		return nil
+	}
+
 	if info.IsDir() {
-		err = filepath.Walk(in.Path, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
+		err = filepath.WalkDir(in.Path, func(p string, d os.DirEntry, e error) error {
+			if e != nil {
+				return e
 			}
-			if !info.IsDir() {
-				content, err := os.ReadFile(path)
-				if err != nil {
-					return err
-				}
-				if strings.Contains(string(content), in.Pattern) {
-					matches = append(matches, path)
-				}
+			select { // honour cancellation
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
 			}
-			return nil
+			if d.IsDir() {
+				return nil
+			}
+			return searchFile(p, d.Name())
 		})
 	} else {
-		content, err := os.ReadFile(in.Path)
-		if err != nil {
-			return agent.NewToolResult("search_text", err.Error(), true), nil
-		}
-		if strings.Contains(string(content), in.Pattern) {
-			matches = append(matches, in.Path)
-		}
+		err = searchFile(in.Path, info.Name())
 	}
-
 	if err != nil {
 		return agent.NewToolResult("search_text", err.Error(), true), nil
 	}
 
-	result, err := json.Marshal(matches)
-	if err != nil {
-		return agent.NewToolResult("search_text", err.Error(), true), nil
-	}
-
-	return agent.NewToolResult("search_text", string(result), false), nil
-} 
+	out, _ := json.Marshal(matches)
+	return agent.NewToolResult("search_text", string(out), false), nil
+}

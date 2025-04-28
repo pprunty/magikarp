@@ -1,0 +1,56 @@
+{
+  "name": "read_file",
+  "description": "Reads a text file with a preview-first approach to conserve token usage. This tool returns a compact preview of the file contents along with file metadata and a stable ID for accessing the full contents in chunks if needed. This approach is particularly valuable for large files, as it prevents context window bloat while still providing enough information to determine relevance. The preview includes the file's first few lines or bytes (configurable), total size, line count, modification time, format detection, and a token-efficient way to access more content through the read_file_chunk tool. Use this tool to efficiently access file contents while managing token budget constraints.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Required. The local file path to read. Must be a valid local path to a text file. The tool will attempt case-insensitive matching if the exact path is not found."
+      },
+      "preview_mode": {
+        "type": "boolean",
+        "description": "When true, returns a preview with metadata instead of full content. For files larger than 100KB, preview mode is automatically enabled regardless of this setting to prevent context window overflow. Defaults to false for small files."
+      },
+      "preview_lines": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 50,
+        "description": "Number of lines to include in the preview when in preview mode. Defaults to 10 lines. Maximum value is 50 lines to keep the preview compact."
+      },
+      "preview_bytes": {
+        "type": "integer",
+        "minimum": 100,
+        "maximum": 4000,
+        "description": "Maximum number of bytes to include in the preview when in preview mode. Defaults to 1000 bytes. Maximum value is 4000 bytes (approximately 1000 tokens) to prevent excessive token usage."
+      },
+      "detect_encoding": {
+        "type": "boolean",
+        "description": "When set to true, the tool will attempt to read files even if they contain invalid UTF-8 sequences. This is useful for reading files with different encodings. Defaults to false."
+      }
+    },
+    "required": ["path"],
+    "additionalProperties": false,
+    "examples": [
+      {
+        "path": "./config.json",
+        "preview_mode": true
+      },
+      {
+        "path": "./large_log.txt",
+        "preview_lines": 20,
+        "preview_bytes": 2000
+      },
+      {
+        "path": "./source.py",
+        "preview_mode": true,
+        "preview_lines": 15
+      },
+      {
+        "path": "./data.csv",
+        "preview_mode": true,
+        "preview_bytes": 1500
+      }
+    ]
+  }
+}

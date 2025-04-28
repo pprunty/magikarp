@@ -1,0 +1,9 @@
+{
+  "description": "Custom agent with ip, execution, text plugins",
+  "name": "personal_assistant",
+  "plugins": [
+    "ip",
+    "execution",
+    "text"
+  ]
+}

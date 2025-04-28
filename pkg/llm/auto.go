@@ -91,7 +91,7 @@ func (c *AutoClient) selectModel(prompt string) string {
 }
 
 // Chat sends a message to the appropriate model and returns its response
-func (c *AutoClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
+func (c *AutoClient) Chat(ctx context.Context, messages []Message, tools []Tool, systemPrompt string) ([]Message, []ToolUse, error) {
 	// Update history
 	c.history = append(c.history, messages...)
 	
@@ -119,8 +119,8 @@ func (c *AutoClient) Chat(ctx context.Context, messages []Message, tools []Tool)
 		return nil, nil, fmt.Errorf("model not found: %s", c.model)
 	}
 	
-	// Send message to selected model
-	return client.Chat(ctx, c.history, tools)
+	// Send message to selected model with the system prompt
+	return client.Chat(ctx, c.history, tools, systemPrompt)
 }
 
 // SendToolResult sends a tool result back to the current model

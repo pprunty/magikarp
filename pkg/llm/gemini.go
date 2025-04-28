@@ -40,19 +40,31 @@ func (c *GeminiClient) Name() string {
 }
 
 // Chat sends a message to Gemini and returns its response
-func (c *GeminiClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
+func (c *GeminiClient) Chat(ctx context.Context, messages []Message, tools []Tool, systemPrompt string) ([]Message, []ToolUse, error) {
 	// Get the model
 	model := c.client.GenerativeModel(c.model)
 
-	// Convert messages to Gemini format
-	geminiMessages := make([]*genai.Content, len(messages))
-	for i, msg := range messages {
-		geminiMessages[i] = &genai.Content{
+	// Convert messages to Gemini format, including system prompt if available
+	geminiMessages := make([]*genai.Content, 0, len(messages)+1)
+	
+	// Add system message if provided
+	if systemPrompt != "" {
+		geminiMessages = append(geminiMessages, &genai.Content{
+			Parts: []genai.Part{
+				genai.Text(systemPrompt),
+			},
+			Role: "system",
+		})
+	}
+	
+	// Add the rest of the messages
+	for _, msg := range messages {
+		geminiMessages = append(geminiMessages, &genai.Content{
 			Parts: []genai.Part{
 				genai.Text(msg.Content),
 			},
 			Role: msg.Role,
-		}
+		})
 	}
 
 	// Start a chat session
@@ -113,6 +125,7 @@ func (c *GeminiClient) SendToolResult(ctx context.Context, messages []Message, t
 		})
 	}
 
-	// Continue the conversation with all tools available
-	return c.Chat(ctx, messages, nil)
+	// Continue the conversation with all tools available, passing empty system prompt
+	// to preserve any system prompt that was previously set
+	return c.Chat(ctx, messages, nil, "")
 } 

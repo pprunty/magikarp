@@ -1,43 +1,41 @@
 package llm
 
 import (
-	"context"
-	"encoding/json"
+    "context"
+    "encoding/json"
 )
 
-// Message represents a message in a conversation
+// Message represents a single message in the conversation
 type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+    Role    string // "user", "assistant", or "tool"
+    Content string
+    ToolID  string // Used to associate tool results with tool calls
 }
 
-// Tool represents a tool that can be used by the LLM
+// Tool represents a tool definition passed to Claude
 type Tool struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	InputSchema map[string]interface{} `json:"input_schema"`
+    Name        string
+    Description string
+    InputSchema map[string]any
 }
 
-// ToolUse represents a tool use request from the LLM
+// ToolUse represents a tool call from Claude
 type ToolUse struct {
-	ID    string          `json:"id"`
-	Name  string          `json:"name"`
-	Input json.RawMessage `json:"input"`
+    ID    string
+    Name  string
+    Input json.RawMessage
 }
 
-// ToolResult represents a tool result to be sent back to the LLM
+// ToolResult represents the result of executing a tool
 type ToolResult struct {
-	ID      string `json:"id"`
-	Content string `json:"content"`
-	IsError bool   `json:"is_error"`
+    ID      string
+    Content string
+    IsError bool
 }
 
-// Client is the interface that all LLM clients must implement
+// Client interface defines methods for interacting with LLM providers
 type Client interface {
-	// Name returns the name of the LLM
-	Name() string
-	// Chat sends a message to the LLM and returns its response
-	Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error)
-	// SendToolResult sends a tool result back to the LLM and returns its response
-	SendToolResult(ctx context.Context, messages []Message, toolResults []ToolResult) ([]Message, []ToolUse, error)
-} 
+    Name() string
+    Chat(ctx context.Context, messages []Message, tools []Tool, systemPrompt string) ([]Message, []ToolUse, error)
+    SendToolResult(ctx context.Context, messages []Message, results []ToolResult) ([]Message, []ToolUse, error)
+}

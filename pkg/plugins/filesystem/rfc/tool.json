@@ -1,0 +1,58 @@
+{
+  "name": "read_file_chunk",
+  "description": "Retrieves a specific chunk of content from a previously previewed file. This tool works in tandem with the read_file tool when it's used in preview mode. Once read_file returns a preview and file_id, you can use this tool to retrieve specific portions of the file content on demand, either by line range or byte range. This approach conserves tokens by allowing the model to request only the specific parts of the file that are relevant to the current task, rather than loading the entire file into the context. This is particularly useful for large files like logs, source code, or data files where only certain sections may be needed for analysis.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "file_id": {
+        "type": "string",
+        "description": "Required. The file_id obtained from a previous read_file preview response. This stable identifier allows the system to locate the correct file for chunk extraction."
+      },
+      "start_line": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Optional. The first line to retrieve (0-indexed). Must be used together with end_line. Specify this parameter when you want to retrieve specific lines from the file."
+      },
+      "end_line": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Optional. The last line to retrieve (exclusive). Must be used together with start_line. The range is inclusive of start_line and exclusive of end_line."
+      },
+      "start_byte": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Optional. The byte offset to start reading from. Must be used together with byte_length. Use this approach instead of line-based retrieval when you need precise byte-level control or when working with binary data."
+      },
+      "byte_length": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 100000,
+        "description": "Optional. The number of bytes to read. Must be used together with start_byte. Maximum value is 100,000 bytes (100KB) to prevent context overflow."
+      }
+    },
+    "required": ["file_id"],
+    "additionalProperties": false,
+    "examples": [
+      {
+        "file_id": "file-8f7e6d5c4b3a",
+        "start_line": 10,
+        "end_line": 20
+      },
+      {
+        "file_id": "file-1a2b3c4d5e6f",
+        "start_byte": 1024,
+        "byte_length": 4096
+      },
+      {
+        "file_id": "file-abcdef123456",
+        "start_line": 100,
+        "end_line": 150
+      },
+      {
+        "file_id": "file-9876543210ab",
+        "start_byte": 0,
+        "byte_length": 1000
+      }
+    ]
+  }
+}

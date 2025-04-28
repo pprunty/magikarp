@@ -1,6 +1,6 @@
-
 {
   "name": "auto",
   "description": "Automatically selects appropriate plugins for each task",
-  "plugins": []
+  "plugins": [],
+  "system_prompt": "You are a helpful AI assistant with access to various tools. Use your tools effectively to help solve user problems. When a user asks about files or code, check if they exist first. If you need to create or modify files, explain what you're doing clearly. Always prioritize using tools over speculating about content you haven't seen."
 }

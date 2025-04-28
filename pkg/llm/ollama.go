@@ -29,9 +29,11 @@ func (c *OllamaClient) Name() string {
 }
 
 // Chat sends a message to Ollama and returns its response
-func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
-	// Generate enhanced system message
-	systemPrompt := `You are a helpful AI assistant with access to system tools. Follow these rules EXACTLY:
+func (c *OllamaClient) Chat(ctx context.Context, messages []Message, tools []Tool, systemPrompt string) ([]Message, []ToolUse, error) {
+	// Use the provided system prompt if available, otherwise use the default
+	finalSystemPrompt := systemPrompt
+	if finalSystemPrompt == "" {
+		finalSystemPrompt = `You are a helpful AI assistant with access to system tools. Follow these rules EXACTLY:
 
 1. NEVER make up or hallucinate information
 2. ONLY state what you can verify from tool results
@@ -62,12 +64,13 @@ ABSOLUTELY NO HALLUCINATIONS:
 - Never describe files you haven't read
 - Never make assumptions about command outputs
 - If you're not sure about something, say so`
+	}
 
 	// Convert messages to Ollama format
 	ollamaMessages := []map[string]string{
 		{
 			"role":    "system",
-			"content": systemPrompt,
+			"content": finalSystemPrompt,
 		},
 	}
 
@@ -223,5 +226,6 @@ func (c *OllamaClient) SendToolResult(ctx context.Context, messages []Message, t
 	}
 
 	// Continue the conversation with all tools available
-	return c.Chat(ctx, messages, nil)
+	// Pass empty string for systemPrompt to maintain the previous system prompt
+	return c.Chat(ctx, messages, nil, "")
 } 

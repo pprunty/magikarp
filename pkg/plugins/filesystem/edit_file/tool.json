@@ -1,15 +1,59 @@
 {
   "name": "edit_file",
-  "description": "Search-and-replace or append text in a file",
+  "description": "Modifies a text file with various operations. This tool can perform search-and-replace operations to find and replace text patterns, append text to the end of a file, prepend text to the beginning of a file, or completely overwrite a file with new content. The tool works with any plain text file format (e.g., .txt, .md, .go, .py, .js, etc.). If the specified file doesn't exist, it will be created (including any necessary parent directories). For security reasons, only local file paths are allowed.\n\nUse this tool when you need to:\n- Make targeted text replacements in a file (search and replace)\n- Add content to the beginning or end of a file (prepend, append)\n- Completely replace the contents of a file (content)\n- Create a new file with specific content\n\nThe tool will return details about what operation was performed and whether it was successful.",
   "input_schema": {
     "type": "object",
     "properties": {
-      "path": { "type": "string" },
-      "search": { "type": "string" },
-      "replace_with": { "type": "string" },
-      "append": { "type": "string" }
+      "path": {
+        "type": "string",
+        "description": "Required. The local file path to edit or create. Must be a valid local path (e.g., './file.txt', '/path/to/file.txt', or 'C:\\path\\to\\file.txt' on Windows)."
+      },
+      "content": {
+        "type": "string",
+        "description": "Optional. The complete content to write to the file. If provided, this overwrites the entire file and ignores any other operations (search/replace, append, prepend)."
+      },
+      "search": {
+        "type": "string",
+        "description": "Optional. The text to search for when performing a search-and-replace operation. Must be used together with replace_with."
+      },
+      "replace_with": {
+        "type": "string",
+        "description": "Optional. The text to replace all instances of the search text with. Required when search is provided."
+      },
+      "append": {
+        "type": "string",
+        "description": "Optional. Text to add to the end of the file. Can be used alone or together with prepend."
+      },
+      "prepend": {
+        "type": "string",
+        "description": "Optional. Text to add to the beginning of the file. Can be used alone or together with append."
+      }
     },
     "required": ["path"],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "examples": [
+      {
+        "path": "./config.txt",
+        "search": "api_key=old_key",
+        "replace_with": "api_key=new_key"
+      },
+      {
+        "path": "./log.txt",
+        "append": "New log entry at 2023-04-28\n"
+      },
+      {
+        "path": "./header.md",
+        "prepend": "# Project Documentation\n\n"
+      },
+      {
+        "path": "./newfile.txt",
+        "content": "This is a completely new file with this content."
+      },
+      {
+        "path": "./document.txt",
+        "prepend": "HEADER\n",
+        "append": "\nFOOTER"
+      }
+    ]
   }
-} 
+}

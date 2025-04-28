@@ -35,14 +35,24 @@ func (c *OpenAIClient) Name() string {
 }
 
 // Chat sends a message to OpenAI and returns its response
-func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
+func (c *OpenAIClient) Chat(ctx context.Context, messages []Message, tools []Tool, systemPrompt string) ([]Message, []ToolUse, error) {
 	// Convert messages to OpenAI format
-	openaiMessages := make([]openai.ChatCompletionMessage, len(messages))
-	for i, msg := range messages {
-		openaiMessages[i] = openai.ChatCompletionMessage{
+	openaiMessages := make([]openai.ChatCompletionMessage, 0, len(messages)+1)
+	
+	// Add system message if provided
+	if systemPrompt != "" {
+		openaiMessages = append(openaiMessages, openai.ChatCompletionMessage{
+			Role:    "system",
+			Content: systemPrompt,
+		})
+	}
+	
+	// Add the rest of the messages
+	for _, msg := range messages {
+		openaiMessages = append(openaiMessages, openai.ChatCompletionMessage{
 			Role:    msg.Role,
 			Content: msg.Content,
-		}
+		})
 	}
 
 	// Convert tools to OpenAI format
@@ -113,6 +123,7 @@ func (c *OpenAIClient) SendToolResult(ctx context.Context, messages []Message, t
 		})
 	}
 
-	// Continue the conversation with all tools available
-	return c.Chat(ctx, messages, nil)
+	// Continue the conversation with all tools available, passing empty system prompt
+	// to preserve any system prompt that was previously set
+	return c.Chat(ctx, messages, nil, "")
 } 
