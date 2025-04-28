@@ -6,7 +6,8 @@
 *.dylib
 *.test
 *.out
-magikarp
+
+./magikarp
 
 # Test binary, built with `go test -c`
 *.test

@@ -1,0 +1,20 @@
+{
+  "name": "convert_image",
+  "description": "Convert an image file to PNG or JPEG.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "src": {
+        "type": "string"
+      },
+      "dst": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "src",
+      "dst"
+    ],
+    "additionalProperties": false
+  }
+}

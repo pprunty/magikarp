@@ -1,0 +1,15 @@
+{
+  "name": "web",
+  "description": "Tool description",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "example_field": {
+        "type": "string",
+        "description": "Example field description"
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  }
+}

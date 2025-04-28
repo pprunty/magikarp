@@ -1,0 +1,13 @@
+{
+  "name": "search_text",
+  "description": "Search for text in files or directories",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": { "type": "string" },
+      "pattern": { "type": "string" }
+    },
+    "required": ["path", "pattern"],
+    "additionalProperties": false
+  }
+} 

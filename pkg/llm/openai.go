@@ -16,7 +16,7 @@ type OpenAIClient struct {
 }
 
 // NewOpenAIClient creates a new OpenAI client
-func NewOpenAIClient(model string, configPath string) (*OpenAIClient, error) {
+func NewOpenAIClient(model string) (*OpenAIClient, error) {
 	// Check if API key is set
 	if os.Getenv("OPENAI_API_KEY") == "" {
 		return nil, fmt.Errorf("OPENAI_API_KEY environment variable is not set")

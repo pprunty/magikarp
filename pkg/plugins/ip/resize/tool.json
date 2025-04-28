@@ -1,0 +1,33 @@
+{
+  "name": "resize_image",
+  "description": "Resize an image file preserving aspect ratio if one dimension is 0.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "src": {
+        "type": "string",
+        "description": "Path to the source image file"
+      },
+      "image_path": {
+        "type": "string",
+        "description": "Path to the source image file (alternative to src)"
+      },
+      "dst": {
+        "type": "string",
+        "description": "Path to save the resized image (optional)"
+      },
+      "width": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Width in pixels (0 to preserve aspect ratio)"
+      },
+      "height": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Height in pixels (0 to preserve aspect ratio)"
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  }
+}

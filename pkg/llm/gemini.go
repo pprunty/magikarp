@@ -17,7 +17,7 @@ type GeminiClient struct {
 }
 
 // NewGeminiClient creates a new Gemini client
-func NewGeminiClient(model string, configPath string) (*GeminiClient, error) {
+func NewGeminiClient(model string) (*GeminiClient, error) {
 	// Check if API key is set
 	if os.Getenv("GEMINI_API_KEY") == "" {
 		return nil, fmt.Errorf("GEMINI_API_KEY environment variable is not set")

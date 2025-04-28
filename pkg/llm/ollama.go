@@ -13,56 +13,19 @@ import (
 type OllamaClient struct {
 	baseURL string
 	model   string
-	configs *ToolConfigs
 }
 
 // NewOllamaClient creates a new Ollama client
-func NewOllamaClient(model string, configPath string) (*OllamaClient, error) {
-	configs, err := LoadToolConfigs(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load tool configs: %w", err)
-	}
-
+func NewOllamaClient(model string) (*OllamaClient, error) {
 	return &OllamaClient{
 		baseURL: "http://localhost:11434",
 		model:   model,
-		configs: configs,
 	}, nil
 }
 
 // Name returns the name of the LLM
 func (c *OllamaClient) Name() string {
 	return c.model
-}
-
-// shouldUseTool checks if a message indicates the need for a specific tool
-func (c *OllamaClient) shouldUseTool(message string, tool ToolConfig) bool {
-	lowerMsg := strings.ToLower(message)
-
-	// Check direct keywords
-	for _, keyword := range tool.TriggerKeywords {
-		if strings.Contains(lowerMsg, keyword) {
-			return true
-		}
-	}
-
-	// Check for tool combinations
-	toolCombos := map[string][]string{
-		"read_file": {"edit", "modify", "change", "update", "execute", "run"},
-		"edit_file": {"after", "then", "read", "check"},
-		"execute_command": {"output", "result", "after", "then"},
-		"list_files": {"then", "read", "edit", "execute"},
-	}
-
-	if keywords, ok := toolCombos[tool.Name]; ok {
-		for _, keyword := range keywords {
-			if strings.Contains(lowerMsg, keyword) {
-				return true
-			}
-		}
-	}
-
-	return false
 }
 
 // Chat sends a message to Ollama and returns its response
@@ -100,8 +63,6 @@ ABSOLUTELY NO HALLUCINATIONS:
 - Never make assumptions about command outputs
 - If you're not sure about something, say so`
 
-	systemPrompt += "\n\n" + GenerateSystemPrompt(c.configs)
-
 	// Convert messages to Ollama format
 	ollamaMessages := []map[string]string{
 		{
@@ -124,33 +85,20 @@ ABSOLUTELY NO HALLUCINATIONS:
 		"stream":   false,
 	}
 
-	// Check if tools should be included
-	if len(tools) > 0 && len(messages) > 0 {
-		lastMessage := messages[len(messages)-1].Content
-		needsTools := false
-
-		// Check each tool and potential combinations
-		for _, tool := range c.configs.Tools {
-			if c.shouldUseTool(lastMessage, tool) {
-				needsTools = true
-				break
+	// If tools are provided, always make them available
+	if len(tools) > 0 {
+		ollamaTools := make([]map[string]interface{}, len(tools))
+		for i, tool := range tools {
+			ollamaTools[i] = map[string]interface{}{
+				"type": "function",
+				"function": map[string]interface{}{
+					"name":        tool.Name,
+					"description": tool.Description,
+					"parameters":  tool.InputSchema,
+				},
 			}
 		}
-
-		if needsTools {
-			ollamaTools := make([]map[string]interface{}, len(tools))
-			for i, tool := range tools {
-				ollamaTools[i] = map[string]interface{}{
-					"type": "function",
-					"function": map[string]interface{}{
-						"name":        tool.Name,
-						"description": tool.Description,
-						"parameters":  tool.InputSchema,
-					},
-				}
-			}
-			reqBody["tools"] = ollamaTools
-		}
+		reqBody["tools"] = ollamaTools
 	}
 
 	// Marshal request body

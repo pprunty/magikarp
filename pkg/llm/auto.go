@@ -14,7 +14,7 @@ type AutoClient struct {
 }
 
 // NewAutoClient creates a new AutoClient with multiple model support
-func NewAutoClient(models []string, configPath string) (*AutoClient, error) {
+func NewAutoClient(models []string) (*AutoClient, error) {
 	clients := make(map[string]Client)
 	
 	// Initialize all available clients
@@ -25,13 +25,13 @@ func NewAutoClient(models []string, configPath string) (*AutoClient, error) {
 		// Determine which client to create based on model name
 		switch {
 		case strings.HasPrefix(model, "gpt-"):
-			client, err = NewOpenAIClient(model, configPath)
+			client, err = NewOpenAIClient(model)
 		case strings.HasPrefix(model, "claude-"):
-			client, err = NewAnthropicClient(model, configPath)
+			client, err = NewAnthropicClient(model)
 		case strings.HasPrefix(model, "gemini-"):
-			client, err = NewGeminiClient(model, configPath)
+			client, err = NewGeminiClient(model)
 		case strings.HasPrefix(model, "llama"):
-			client, err = NewOllamaClient(model, configPath)
+			client, err = NewOllamaClient(model)
 		default:
 			return nil, fmt.Errorf("unknown model type: %s", model)
 		}

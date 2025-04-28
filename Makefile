@@ -20,12 +20,21 @@ all: install build
 install:
 	$(GOMOD) tidy
 
+# Build the REPL binary
+.PHONY: build
 build:
-	$(GOBUILD) $(LDFLAGS) -o $(BINARY_NAME)
+	go build -ldflags "-s -w" -o bin/magikarp ./cmd/magikarp
 
-run: install build
-	@echo "\033[1;32mStarting Magikarp...\033[0m"
-	./$(BINARY_NAME)
+
+# Build the scaffolding CLI
+.PHONY: mgk
+mgk:
+	go build -o bin/mgk ./cmd/mgk
+
+# Convenience dev target
+.PHONY: run
+run: build
+	./bin/magikarp
 
 test:
 	$(GOTEST) -v ./...

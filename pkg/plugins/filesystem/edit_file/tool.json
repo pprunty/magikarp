@@ -1,0 +1,15 @@
+{
+  "name": "edit_file",
+  "description": "Search-and-replace or append text in a file",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": { "type": "string" },
+      "search": { "type": "string" },
+      "replace_with": { "type": "string" },
+      "append": { "type": "string" }
+    },
+    "required": ["path"],
+    "additionalProperties": false
+  }
+} 

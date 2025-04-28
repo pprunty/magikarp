@@ -1,0 +1,6 @@
+
+{
+  "name": "coding",
+  "description": "Tools for reading, editing files and analysing text",
+  "plugins": ["filesystem"]
+}

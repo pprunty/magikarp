@@ -1,0 +1,9 @@
+{
+  "name": "list_tools",
+  "description": "List all available tools and their descriptions",
+  "input_schema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+} 

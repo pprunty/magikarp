@@ -1,0 +1,12 @@
+{
+  "name": "analyze_text",
+  "description": "Analyze text for patterns or statistics",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": { "type": "string" }
+    },
+    "required": ["path"],
+    "additionalProperties": false
+  }
+} 

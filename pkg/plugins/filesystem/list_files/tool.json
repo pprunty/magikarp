@@ -1,0 +1,14 @@
+{
+  "name": "list_files",
+  "description": "List files and directories at a given path (defaults to current directory)",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "path": { 
+        "type": "string",
+        "description": "Path to list files from (defaults to current directory)"
+      }
+    },
+    "additionalProperties": false
+  }
+} 

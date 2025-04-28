@@ -1,0 +1,6 @@
+
+{
+  "name": "auto",
+  "description": "Automatically selects appropriate plugins for each task",
+  "plugins": []
+}

@@ -26,50 +26,50 @@ func buildSchema(td agent.ToolDefinition) anthropic.ToolInputSchemaParam {
 		"properties": map[string]interface{}{},
 		"additionalProperties": false,
 	}
-
+	
 	// Add required array if needed
 	requiredFields := []string{}
-
+	
 	// Process parameters from the tool definition
 	if len(td.Parameters) > 0 {
 		properties := map[string]interface{}{}
-
+		
 		for name, param := range td.Parameters {
 			// Skip invalid property names
 			if !propertyNameRegex.MatchString(name) {
 				continue
 			}
-
+			
 			// Create valid JSON Schema property
 			prop := map[string]interface{}{
 				"type": param.Type,
 				"description": param.Description,
 			}
-
+			
 			properties[name] = prop
-
+			
 			if param.Required {
 				requiredFields = append(requiredFields, name)
 			}
 		}
-
+		
 		schemaObj["properties"] = properties
 	} else if td.InputSchema != nil {
 		// Use the existing input schema if available
 		if props, ok := td.InputSchema["properties"].(map[string]interface{}); ok {
 			schemaObj["properties"] = props
 		}
-
+		
 		if req, ok := td.InputSchema["required"].([]string); ok && len(req) > 0 {
 			requiredFields = req
 		}
 	}
-
+	
 	// Only add required if there are required fields
 	if len(requiredFields) > 0 {
 		schemaObj["required"] = requiredFields
 	}
-
+	
 	// Return the final schema
 	return anthropic.ToolInputSchemaParam{
 		Properties: schemaObj,
@@ -77,7 +77,7 @@ func buildSchema(td agent.ToolDefinition) anthropic.ToolInputSchemaParam {
 }
 
 // NewAnthropicClient creates a new Anthropic client
-func NewAnthropicClient(model string) (*AnthropicClient, error) {
+func NewAnthropicClient(model string, configPath string) (*AnthropicClient, error) {
 	// Check if API key is set
 	if os.Getenv("ANTHROPIC_API_KEY") == "" {
 		return nil, fmt.Errorf("ANTHROPIC_API_KEY environment variable is not set")
@@ -96,7 +96,7 @@ func (c *AnthropicClient) Name() string {
 }
 
 // Chat sends a message to Anthropic and returns its response
-func (c *AnthropicClient) Chat(ctx context.Context, messages []Message, tools []Tool) ([]Message, []ToolUse, error) {
+func (c *AnthropicClient) Chat(ctx context.Context, messages []Message, tools []agent.ToolDefinition) ([]Message, []ToolUse, error) {
 	// Convert messages to Anthropic format
 	anthropicMessages := make([]anthropic.MessageParam, len(messages))
 	for i, msg := range messages {
@@ -112,18 +112,11 @@ func (c *AnthropicClient) Chat(ctx context.Context, messages []Message, tools []
 	// Convert tools to Anthropic format
 	anthropicTools := make([]anthropic.ToolUnionParam, len(tools))
 	for i, tool := range tools {
-		// Convert our Tool type to agent.ToolDefinition for buildSchema
-		toolDef := agent.ToolDefinition{
-			Name:        tool.Name,
-			Description: tool.Description,
-			InputSchema: tool.InputSchema,
-		}
-		
 		anthropicTools[i] = anthropic.ToolUnionParam{
 			OfTool: &anthropic.ToolParam{
 				Name:        tool.Name,
 				Description: anthropic.String(tool.Description),
-				InputSchema: buildSchema(toolDef),
+				InputSchema: buildSchema(tool),
 			},
 		}
 	}
@@ -163,7 +156,7 @@ func (c *AnthropicClient) Chat(ctx context.Context, messages []Message, tools []
 }
 
 // SendToolResult sends a tool result back to Anthropic and returns its response
-func (c *AnthropicClient) SendToolResult(ctx context.Context, messages []Message, toolResults []ToolResult) ([]Message, []ToolUse, error) {
+func (c *AnthropicClient) SendToolResult(ctx context.Context, messages []Message, toolResults []agent.ToolResult) ([]Message, []ToolUse, error) {
 	// Convert messages to Anthropic format
 	anthropicMessages := make([]anthropic.MessageParam, len(messages))
 	for i, msg := range messages {
