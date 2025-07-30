@@ -4,6 +4,9 @@ An open-source coding assistant CLI tool built with Go. Magikarp provides an int
 
 The project's journey can be followed over on Subtack at [Build Your Own Claude Code](https://furrycircuits.io). Stay tuned.
 
+![v0.1.0.png](./assets/v0.1.0.webp)
+
+
 **Feature Checklist**
 
 - [ ] Basic UI terminal
@@ -24,8 +27,6 @@ The project's journey can be followed over on Subtack at [Build Your Own Claude 
 - [ ] Run magikarp as shorcut on terminal, i.e `mgk --prompt push all changes to git`
 
 If you have any more ideas, don't hesitate to let me know on [X](https://x.com/pprunty_), or by creating an issue on [GitHub](https://github.com/pprunty/magikarp/issues).
-
-![v0.1.0.png](./assets/v0.1.0.webp)
 
 ## Prerequisites
 
