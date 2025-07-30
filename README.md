@@ -4,7 +4,7 @@ An open-source coding assistant CLI tool built with Go. Magikarp provides an int
 
 The project's journey can be followed over on Subtack at [Build Your Own Claude Code](https://furrycircuits.io). Stay tuned.
 
-![v0.1.0.png](./assets/images/v0.1.0.webp)
+![v0.1.0.png](./assets/v0.1.0.webp)
 
 ## Prerequisites
 
