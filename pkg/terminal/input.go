@@ -32,6 +32,7 @@ type InputModel struct {
 	filteredCommands    []SlashCommand // Filtered slash commands based on input
 	triggerHelpScreen    bool      // Whether to trigger help screen
 	triggerModelSelect   bool      // Whether to trigger model selection screen
+	speechMode          bool      // Whether speech mode is enabled
 }
 
 // NewInputModel creates a new input model for the selected provider
@@ -64,6 +65,7 @@ func NewInputModel(provider string) InputModel {
 		filteredCommands:    GetAvailableCommands(),
 		triggerHelpScreen:    false,
 		triggerModelSelect:   false,
+		speechMode:          false, // Speech mode starts disabled
 	}
 }
 
@@ -133,6 +135,9 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					case "/model":
 						m.triggerModelSelect = true
 						return m, tea.Quit
+					case "/speech":
+						m.speechMode = !m.speechMode
+						return m, nil
 					}
 				}
 				return m, nil
@@ -445,10 +450,17 @@ func (m InputModel) View() string {
 	
 	s += "\n"
 
-	// Show specific model name based on provider
+	// Show specific model name based on provider with speech mode indicator
 	modelName := GetModelDisplayName(m.provider)
+	
+	speechIndicator := ""
+	if m.speechMode {
+		speechIndicator = " " + speechModeOnStyle.Render("•") + " " + modelRunningStyle.Render("speech mode on")
+	} else {
+		speechIndicator = " " + speechModeOffStyle.Render("•") + " " + modelRunningStyle.Render("speech mode off")
+	}
 
-	s += modelRunningStyle.Render("• " + modelName)
+	s += modelRunningStyle.Render("• " + modelName) + speechIndicator
 	s += "\n"
 
 	// Show help text or exit prompt
@@ -508,4 +520,11 @@ var (
 
 	slashCommandActiveStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#9B59B6")) // Purple for active items
+	
+	// Speech mode indicator styles
+	speechModeOffStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FF0000")) // Red circle for speech mode off
+	
+	speechModeOnStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#00FF00")) // Green circle for speech mode on
 )

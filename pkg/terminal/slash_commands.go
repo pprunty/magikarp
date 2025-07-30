@@ -18,6 +18,7 @@ func GetAvailableCommands() []SlashCommand {
 		{Name: "/exit", Description: "Exit Magikarp"},
 		{Name: "/help", Description: "Show help information"},
 		{Name: "/model", Description: "Switch between AI models"},
+		{Name: "/speech", Description: "Toggle speech mode on/off"},
 	}
 }
 

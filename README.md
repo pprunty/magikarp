@@ -4,7 +4,7 @@ An open-source coding assistant CLI tool built with Go. Magikarp provides an int
 
 The project's journey can be followed over on Subtack at [Build Your Own Claude Code](https://furrycircuits.io). Stay tuned.
 
-![shiny_magikarp.png](assets/shiny_magikarp.png)
+![v0.1.0.png](assets/images/v0.1.0.png)
 
 ## Prerequisites
 
@@ -43,7 +43,27 @@ Before installing Magikarp, ensure you have the following installed:
 
 ### Configuration
 
-Set up your API keys as environment variables:
+Set up your API keys by creating a `.env` file:
+
+1. **Copy the template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your API keys:**
+   ```bash
+   # Anthropic API Key (for Claude models)
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+   # OpenAI API Key (for GPT models)  
+   OPENAI_API_KEY=your_openai_api_key_here
+
+   # Google Gemini API Key (for Gemini models)
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+Alternatively, you can set up your API keys as environment variables:
+
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-key"
 export OPENAI_API_KEY="your-openai-key"

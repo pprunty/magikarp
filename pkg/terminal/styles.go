@@ -17,8 +17,7 @@ var (
 		Foreground(lipgloss.Color("#FFFFFF"))
 
 	helpStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#626262")).
-		Italic(true)
+		Foreground(lipgloss.Color("#626262"))
 
 	quitTextStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#04B575")).
