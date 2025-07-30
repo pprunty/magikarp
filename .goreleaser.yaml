@@ -1,0 +1,81 @@
+project_name: magikarp
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    binary: magikarp
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+nfpms:
+  - id: packages
+    package_name: magikarp
+    file_name_template: "{{ .ConventionalFileName }}"
+    vendor: pprunty
+    homepage: https://github.com/pprunty/magikarp
+    maintainer: pprunty <github@pprunty>
+    description: AI-powered coding assistant CLI tool
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+
+brews:
+  - repository:
+      owner: pprunty
+      name: homebrew-tap
+    directory: Formula
+    homepage: https://github.com/pprunty/magikarp
+    description: AI-powered coding assistant CLI tool
+    license: MIT
+    test: |
+      system "#{bin}/magikarp", "--version"
+
+release:
+  github:
+    owner: pprunty
+    name: magikarp
+  draft: false
+  prerelease: auto
