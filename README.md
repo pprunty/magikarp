@@ -1,4 +1,4 @@
- # magikarp
+# magikarp
 
 An open-source coding assistant CLI tool built with Go. Magikarp provides an interactive terminal interface for AI-powered coding assistance with support for multiple LLM providers (Claude, GPT, Gemini).
 
@@ -48,4 +48,4 @@ Set up your API keys as environment variables:
 export ANTHROPIC_API_KEY="your-anthropic-key"
 export OPENAI_API_KEY="your-openai-key"
 export GEMINI_API_KEY="your-gemini-key"
-``` 
+```
