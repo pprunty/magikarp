@@ -137,6 +137,12 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						return m, tea.Quit
 					case "/speech":
 						m.speechMode = !m.speechMode
+						// Update placeholder based on speech mode
+						if m.speechMode {
+							m.textInput.Placeholder = "Listening..."
+						} else {
+							m.textInput.Placeholder = ""
+						}
 						return m, nil
 					}
 				}

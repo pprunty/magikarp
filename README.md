@@ -4,6 +4,27 @@ An open-source coding assistant CLI tool built with Go. Magikarp provides an int
 
 The project's journey can be followed over on Subtack at [Build Your Own Claude Code](https://furrycircuits.io). Stay tuned.
 
+**Feature Checklist**
+
+- [ ] Basic UI terminal
+- [ ] LLM Provider SDK with sbtract interface for Gemini, GPT, Claude, also include claude-code SDK
+- [ ] Release first version for `brew`, `yum`, `go install`, etc. using `GoReleaser`
+- [ ] Optimized tools (i.e `find_file`) with toolboxing (i.e `filesystem/` -> `read_file`, `write_file`, `update_file` etc.)
+- [ ] Speech-to-text mode
+- [ ] /init command for creating `AGENT.md` (hopefully LLM providers can agree on universal convention sometime soon...)
+- [ ] Automatic model selection based on user prompt (i.e auto choose best model for the task)
+- [ ] MCP integration
+- [ ] Default built-in `magikarp` agent which on user prompt writes back to core codebase to do things like create new slash commands, new tools, etc.
+- [ ] Show file difference on update
+    - [ ] Prompt user to accept/reject updates
+- [ ] Parallel processing for independent tasks
+    - [ ] master/slave toggle for spinning up multiple agents to complete long tasks
+- [ ] Plan mode with optimized model selection, i.e setup could use o3 for planning, gemini for scrutinizing, claude for coding up the plan
+- [ ] Ability to write back to system prompt with hot reload, something like [Karpathy mentions here](https://x.com/karpathy/status/1921368644069765486)
+- [ ] Run magikarp as shorcut on terminal, i.e `mgk --prompt push all changes to git`
+
+If you have any more ideas, don't hesitate to let me know on [X](https://x.com/pprunty_), or by creating an issue on [GitHub](https://github.com/pprunty/magikarp/issues).
+
 ![v0.1.0.png](./assets/v0.1.0.webp)
 
 ## Prerequisites
@@ -69,3 +90,9 @@ export ANTHROPIC_API_KEY="your-anthropic-key"
 export OPENAI_API_KEY="your-openai-key"
 export GEMINI_API_KEY="your-gemini-key"
 ```
+
+**Where to get your API keys**
+
+- **Anthropic (Claude):** <https://console.anthropic.com/account/keys>
+- **OpenAI (GPT):** <https://platform.openai.com/account/api-keys>
+- **Google Gemini (AI Studio):** <https://makersuite.google.com/app/apikey> (create an API key in Google AI Studio)

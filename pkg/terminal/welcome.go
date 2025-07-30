@@ -15,7 +15,7 @@ func renderWelcomeBox() string {
 	}
 
 	// Style the content with gray for subtitle and cwd
-	content := "✻ Welcome to Magikarp!\n\n"
+	content := "△ Welcome to Magikarp!\n\n"
 	content += grayTextStyle.Render("  AI coding assistant with multiple LLM providers") + "\n\n"
 	content += grayTextStyle.Render("  cwd: " + cwd)
 
@@ -23,7 +23,7 @@ func renderWelcomeBox() string {
 	maxLineLength := len("  AI coding assistant with multiple LLM providers")
 	cwdLineLength := len("  cwd: " + cwd)
 	titleLineLength := len("✻ Welcome to Magikarp!")
-	
+
 	width := maxLineLength
 	if cwdLineLength > width {
 		width = cwdLineLength
@@ -31,7 +31,7 @@ func renderWelcomeBox() string {
 	if titleLineLength > width {
 		width = titleLineLength
 	}
-	
+
 	// Add some padding
 	width += 4
 
@@ -54,9 +54,9 @@ func renderWelcomeBoxWithVersion() string {
 // Styles for welcome box content
 var (
 	grayTextStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#626262"))
+			Foreground(lipgloss.Color("#626262"))
 
 	versionDisplayStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFFFFF")).
-		Bold(true)
+				Foreground(lipgloss.Color("#FFFFFF")).
+				Bold(true)
 )
