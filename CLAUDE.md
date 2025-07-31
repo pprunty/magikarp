@@ -21,6 +21,8 @@ magikarp/
 │   ├── tools/                # Tool integrations  
 │   ├── orchestration/        # Request orchestration
 │   └── terminal/             # Terminal UI (Bubble Tea)
+├── assets/                   # Images and static files
+├── docs/                     # Architecture docs
 ├── config.yaml               # Configuration file
 ├── Makefile                  # Build automation
 └── go.mod                    # Go module definition
@@ -71,7 +73,7 @@ Key dependencies:
 
 ## Terminal UI Architecture
 
-The terminal user interface (TUI) lives under `internal/terminal/` (planned move to `pkg/terminal/`). It is built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and follows the classic **model–update–view** cycle.
+The terminal user interface (TUI) lives under `internal/terminal/`. It is built with [Bubble Tea](https://github.com/charmbracelet/bubbletea) and follows the classic **model–update–view** cycle.
 
 ### File overview
 - `menu.go` – defines `MenuModel`, the main-menu Bubble Tea model. It contains:

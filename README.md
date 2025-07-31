@@ -2,17 +2,17 @@
 
 An open-source coding assistant CLI tool built with Go. Magikarp provides an interactive terminal interface for AI-powered coding assistance with support for multiple LLM providers (Claude, GPT, Gemini).
 
-The project's journey can be followed over on Subtack at [Build Your Own Claude Code](https://furrycircuits.io). Stay tuned.
+The project's journey will be document over on Subtack as part of my [Build Your Own Claude Code](https://furrycircuits.io) series. Stay tuned.
 
 ![v0.1.0.png](./assets/v0.1.0.webp)
 
 
 **Feature Checklist**
 
-- [ ] Basic UI terminal
+- [x] Basic UI terminal
 - [ ] LLM Provider SDK with sbtract interface for Gemini, GPT, Claude, also include claude-code SDK
-- [ ] Release first version for `brew`, `yum`, `go install`, etc. using `GoReleaser`
 - [ ] Optimized tools (i.e `find_file`) with toolboxing (i.e `filesystem/` -> `read_file`, `write_file`, `update_file` etc.)
+- [ ] Release first version for `brew`, `yum`, `go install`, etc. using `GoReleaser`
 - [ ] Speech-to-text mode
 - [ ] /init command for creating `AGENT.md` (hopefully LLM providers can agree on universal convention sometime soon...)
 - [ ] Automatic model selection based on user prompt (i.e auto choose best model for the task)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pprunty/magikarp/pkg/terminal"
+	"github.com/pprunty/magikarp/internal/terminal"
 	"github.com/spf13/cobra"
 )
 
