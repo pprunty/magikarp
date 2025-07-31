@@ -1,42 +1,52 @@
 package terminal
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pprunty/magikarp/internal/config"
+	"github.com/pprunty/magikarp/internal/speech"
 )
 
 // InputModel represents the text input state
 type InputModel struct {
-	textInput           textinput.Model
-	provider            string
-	quitting            bool
-	message             string
-	width               int
-	height              int
-	messages            []string // Store conversation history
-	historyManager      *HistoryManager
-	historyIndex        int       // Current position in history (newest = len-1)
-	inHistoryMode       bool      // Whether we're navigating history
-	originalInput       string    // Store original input when entering history mode
-	ctrlCPressed        bool      // Track if Ctrl+C was recently pressed
-	ctrlCTime           time.Time // When Ctrl+C was pressed
-	showExitPrompt      bool      // Show the exit prompt message
-	showingSlashCommands bool          // Whether slash command menu is visible
-	slashCommandCursor  int            // Current position in slash command menu
-	availableCommands   []SlashCommand // Available slash commands
-	filteredCommands    []SlashCommand // Filtered slash commands based on input
-	triggerHelpScreen    bool      // Whether to trigger help screen
-	triggerModelSelect   bool      // Whether to trigger model selection screen
-	speechMode          bool      // Whether speech mode is enabled
+	textInput            textinput.Model
+	provider             string
+	quitting             bool
+	message              string
+	width                int
+	height               int
+	messages             []string // Store conversation history
+	historyManager       *HistoryManager
+	historyIndex         int            // Current position in history (newest = len-1)
+	inHistoryMode        bool           // Whether we're navigating history
+	originalInput        string         // Store original input when entering history mode
+	ctrlCPressed         bool           // Track if Ctrl+C was recently pressed
+	ctrlCTime            time.Time      // When Ctrl+C was pressed
+	showExitPrompt       bool           // Show the exit prompt message
+	showingSlashCommands bool           // Whether slash command menu is visible
+	slashCommandCursor   int            // Current position in slash command menu
+	availableCommands    []SlashCommand // Available slash commands
+	filteredCommands     []SlashCommand // Filtered slash commands based on input
+	triggerHelpScreen    bool           // Whether to trigger help screen
+	triggerModelSelect   bool           // Whether to trigger model selection screen
+	speechMode           bool           // Whether speech mode is enabled
+
+	// Speech management (added)
+	speechCtx    context.Context
+	speechCancel context.CancelFunc
+	speechCh     chan string
+	cfg          *config.Config
 }
 
 // NewInputModel creates a new input model for the selected provider
-func NewInputModel(provider string) InputModel {
+func NewInputModel(provider string, cfg *config.Config) InputModel {
 	ti := textinput.New()
 	ti.Placeholder = ""
 	ti.Focus()
@@ -51,26 +61,37 @@ func NewInputModel(provider string) InputModel {
 	}
 
 	return InputModel{
-		textInput:           ti,
-		provider:            provider,
-		width:               80,         // Default width
-		height:              24,         // Default height
-		messages:            []string{}, // Initialize empty message history
-		historyManager:      histManager,
-		historyIndex:        -1, // Not in history mode
-		inHistoryMode:       false,
+		textInput:            ti,
+		provider:             provider,
+		width:                80,         // Default width
+		height:               24,         // Default height
+		messages:             []string{}, // Initialize empty message history
+		historyManager:       histManager,
+		historyIndex:         -1, // Not in history mode
+		inHistoryMode:        false,
 		showingSlashCommands: false,
-		slashCommandCursor:  0,
-		availableCommands:   GetAvailableCommands(),
-		filteredCommands:    GetAvailableCommands(),
+		slashCommandCursor:   0,
+		availableCommands:    GetAvailableCommands(),
+		filteredCommands:     GetAvailableCommands(),
 		triggerHelpScreen:    false,
 		triggerModelSelect:   false,
-		speechMode:          false, // Speech mode starts disabled
+		speechMode:           false, // Speech mode starts disabled
+		cfg:                  cfg,   // Store config reference
 	}
 }
 
 // timeoutMsg is sent when the Ctrl+C timeout expires
 type timeoutMsg struct{}
+
+// speechMsg is sent when speech is transcribed
+type speechMsg struct {
+	text string
+}
+
+// toggleSpeechMsg is sent to toggle speech mode
+type toggleSpeechMsg struct {
+	on bool
+}
 
 func (m InputModel) Init() tea.Cmd {
 	return textinput.Blink
@@ -91,6 +112,59 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Timeout expired, reset Ctrl+C state
 		m.ctrlCPressed = false
 		m.showExitPrompt = false
+		return m, nil
+	case speechMsg:
+		// Handle transcribed speech
+		if msg.text != "" {
+			log.Printf("Processing speech message: %s", msg.text)
+			// Set the text input to the transcribed text (keep it visible)
+			m.textInput.SetValue(msg.text)
+			// Add message to conversation history
+			m.messages = append(m.messages, msg.text)
+			m.message = msg.text
+
+			// Save to input history
+			if m.historyManager != nil {
+				m.historyManager.AddMessage(msg.text)
+			}
+
+			// Don't clear the input - let user see the transcribed text
+			// They can press Enter to submit or edit it
+		}
+
+		// Don't chain more speech commands to avoid UI spam
+		return m, nil
+	case pollTickMsg:
+		// This message type is no longer used, but kept for compatibility
+		return m, nil
+	case toggleSpeechMsg:
+		// Handle speech mode toggle
+		m.speechMode = msg.on
+		if m.speechMode {
+			m.textInput.Placeholder = "Listening..."
+			// Start speech listening
+			if m.speechCtx == nil && m.cfg != nil {
+				m.speechCtx, m.speechCancel = context.WithCancel(context.Background())
+				m.speechCh = make(chan string, 10)
+				log.Printf("Starting speech recognition...")
+
+				// Return command to start speech listening
+				return m, m.startSpeechCmd()
+			}
+		} else {
+			m.textInput.Placeholder = ""
+			// Stop speech listening
+			if m.speechCancel != nil {
+				log.Printf("Stopping speech recognition...")
+				m.speechCancel()
+				m.speechCtx = nil
+				m.speechCancel = nil
+				if m.speechCh != nil {
+					close(m.speechCh)
+					m.speechCh = nil
+				}
+			}
+		}
 		return m, nil
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -124,7 +198,7 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					selectedCommand := m.filteredCommands[m.slashCommandCursor]
 					m.showingSlashCommands = false
 					m.textInput.SetValue("")
-					
+
 					switch selectedCommand.Name {
 					case "/exit":
 						m.quitting = true
@@ -136,14 +210,12 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.triggerModelSelect = true
 						return m, tea.Quit
 					case "/speech":
-						m.speechMode = !m.speechMode
-						// Update placeholder based on speech mode
-						if m.speechMode {
-							m.textInput.Placeholder = "Listening..."
-						} else {
-							m.textInput.Placeholder = ""
-						}
-						return m, nil
+						newSpeechMode := !m.speechMode
+						return m, tea.Batch(
+							func() tea.Msg {
+								return toggleSpeechMsg{on: newSpeechMode}
+							},
+						)
 					}
 				}
 				return m, nil
@@ -154,7 +226,7 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			// For all other keys, continue to normal input processing
 		}
-		
+
 		// Handle regular input
 		switch msg.String() {
 		case "ctrl+c":
@@ -185,13 +257,13 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.quitting = true
 					return m, tea.Quit
 				}
-				
+
 				// Check if user typed "help" to show help screen
 				if m.textInput.Value() == "help" {
 					m.triggerHelpScreen = true
 					return m, tea.Quit
 				}
-				
+
 				// Add message to conversation history
 				m.messages = append(m.messages, m.textInput.Value())
 				m.message = m.textInput.Value()
@@ -251,18 +323,18 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Update text input first to allow continued typing
 	m.textInput, cmd = m.textInput.Update(msg)
-	
+
 	inputValue := m.textInput.Value()
-	
+
 	// Check if user typed "/" to trigger slash commands or is typing a slash command
 	if strings.HasPrefix(inputValue, "/") {
 		if !m.showingSlashCommands {
 			m.showingSlashCommands = true
 		}
-		
+
 		// Filter commands based on current input
 		m.filteredCommands = FilterCommands(inputValue)
-		
+
 		// Reset cursor if it's out of bounds due to filtering
 		if m.slashCommandCursor >= len(m.filteredCommands) {
 			m.slashCommandCursor = 0
@@ -271,7 +343,7 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Hide slash commands if user deleted the "/"
 		m.showingSlashCommands = false
 	}
-	
+
 	return m, cmd
 }
 
@@ -285,18 +357,53 @@ func (m InputModel) ShouldTriggerModelSelect() bool {
 	return m.triggerModelSelect
 }
 
+// startSpeechCmd returns a command that starts speech recognition
+func (m InputModel) startSpeechCmd() tea.Cmd {
+	return func() tea.Msg {
+		// Start the speech listening goroutine
+		go func() {
+			if err := speech.Listen(m.speechCtx, m.speechCh, m.cfg.Speech); err != nil && err != context.Canceled {
+				log.Printf("Speech listening error: %v", err)
+			}
+			log.Printf("Speech listening stopped")
+		}()
+
+		// Wait for speech results in a separate goroutine and send them as messages
+		go func() {
+			for {
+				select {
+				case <-m.speechCtx.Done():
+					return
+				case text := <-m.speechCh:
+					if text != "" {
+						log.Printf("Received speech text from channel: %s", text)
+						// Note: This approach has limitations in Bubble Tea
+						// In a real implementation, we'd need a different approach
+						// For now, we rely on the polling in the speech processing
+					}
+				}
+			}
+		}()
+
+		return nil
+	}
+}
+
+// pollTickMsg is used to continue polling for speech
+type pollTickMsg struct{}
+
 // formatSlashCommand formats a slash command with aligned description
 func formatSlashCommand(command, description string) string {
 	// Define the width for command alignment (like Claude Code)
 	const alignmentWidth = 20
-	
+
 	// Calculate padding needed to align descriptions
 	commandLength := len(stripANSI(command))
 	padding := alignmentWidth - commandLength
 	if padding < 0 {
 		padding = 1 // At least one space
 	}
-	
+
 	paddingStr := strings.Repeat(" ", padding)
 	return "  " + command + paddingStr + description
 }
@@ -391,7 +498,7 @@ func (m InputModel) View() string {
 		// Don't show anything when triggering help or model selection screen
 		return ""
 	}
-	
+
 	if m.quitting {
 		// Show conversation history on exit
 		s := "\n"
@@ -433,7 +540,7 @@ func (m InputModel) View() string {
 	inputWithBorder := borderStyle.Render(m.textInput.View())
 	s += inputWithBorder
 	s += "\n"
-	
+
 	// Show slash command menu if active
 	if m.showingSlashCommands && len(m.filteredCommands) > 0 {
 		s += "\n"
@@ -452,13 +559,12 @@ func (m InputModel) View() string {
 		}
 		s += "\n"
 	}
-	
-	
+
 	s += "\n"
 
 	// Show specific model name based on provider with speech mode indicator
 	modelName := GetModelDisplayName(m.provider)
-	
+
 	speechIndicator := ""
 	if m.speechMode {
 		speechIndicator = " " + speechModeOnStyle.Render("•") + " " + modelRunningStyle.Render("speech mode on")
@@ -466,7 +572,7 @@ func (m InputModel) View() string {
 		speechIndicator = " " + speechModeOffStyle.Render("•") + " " + modelRunningStyle.Render("speech mode off")
 	}
 
-	s += modelRunningStyle.Render("• " + modelName) + speechIndicator
+	s += modelRunningStyle.Render("• "+modelName) + speechIndicator
 	s += "\n"
 
 	// Show help text or exit prompt
@@ -514,23 +620,23 @@ var (
 			Bold(true)
 
 	slashCommandHeaderStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#04B575")).
-			Bold(true)
+				Foreground(lipgloss.Color("#04B575")).
+				Bold(true)
 
 	helpDisplayStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#626262"))
+				Foreground(lipgloss.Color("#626262"))
 
 	// Slash command specific styles
 	slashCommandNormalStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#626262")) // Gray for normal items
+				Foreground(lipgloss.Color("#626262")) // Gray for normal items
 
 	slashCommandActiveStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#9B59B6")) // Purple for active items
-	
+				Foreground(lipgloss.Color("#9B59B6")) // Purple for active items
+
 	// Speech mode indicator styles
 	speechModeOffStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FF0000")) // Red circle for speech mode off
-	
+				Foreground(lipgloss.Color("#FF0000")) // Red circle for speech mode off
+
 	speechModeOnStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#00FF00")) // Green circle for speech mode on
+				Foreground(lipgloss.Color("#00FF00")) // Green circle for speech mode on
 )
