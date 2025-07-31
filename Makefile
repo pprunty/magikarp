@@ -14,7 +14,7 @@ VERSION := $(shell grep '^version:' config.yaml | sed 's/version: *"*\([^"]*\)"*
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
-.PHONY: help build run install clean fmt release
+.PHONY: help build run install clean fmt release whisper-models speech-deps whisper-cli whisper-model
 
 ## Show this help message
 help:
@@ -29,6 +29,10 @@ help:
 	@echo "  $(YELLOW)clean$(RESET)        Clean build artifacts"
 	@echo "  $(YELLOW)fmt$(RESET)          Format code"
 	@echo "  $(YELLOW)release$(RESET)      Build release version with GoReleaser"
+	@echo "  $(YELLOW)whisper-models$(RESET) Download Whisper models for speech recognition"
+	@echo "  $(YELLOW)whisper-cli$(RESET)  Install Whisper CLI"
+	@echo "  $(YELLOW)whisper-model$(RESET) Download base Whisper model"
+	@echo "  $(YELLOW)speech-deps$(RESET)   Setup speech recognition dependencies"
 	@echo ""
 	@echo "$(BLUE)Usage: make [command]$(RESET)"
 
@@ -72,6 +76,45 @@ release:
 	@echo "$(GREEN)Building release with GoReleaser...$(RESET)"
 	goreleaser release --snapshot --clean
 	@echo "$(GREEN)✓ Release build complete$(RESET)"
+
+## Download Whisper models for speech recognition
+whisper-models:
+	@echo "$(GREEN)Downloading Whisper models...$(RESET)"
+	mkdir -p $(HOME)/.magikarp/models
+	@if [ ! -f $(HOME)/.magikarp/models/ggml-small.en.bin ]; then \
+		echo "$(BLUE)Downloading ggml-small.en.bin model (~461MB)...$(RESET)"; \
+		curl -L -o $(HOME)/.magikarp/models/ggml-small.en.bin \
+			https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin; \
+		echo "$(GREEN)✓ Model downloaded to $(HOME)/.magikarp/models/ggml-small.en.bin$(RESET)"; \
+	else \
+		echo "$(YELLOW)Model already exists at $(HOME)/.magikarp/models/ggml-small.en.bin$(RESET)"; \
+	fi
+
+## Install Whisper CLI
+whisper-cli:
+	@echo "$(GREEN)Installing Whisper CLI...$(RESET)"
+	go install github.com/mutablelogic/go-whisper/cmd/whisper@latest
+	@echo "$(GREEN)✓ Whisper CLI installed$(RESET)"
+
+## Download Whisper base model
+whisper-model:
+	@echo "$(GREEN)Downloading Whisper base model (ggml-base.en.bin)...$(RESET)"
+	whisper download ggml-base.en.bin
+	@echo "$(GREEN)✓ Model downloaded to $$HOME/.cache/whisper$(RESET)"
+
+## Setup speech recognition dependencies  
+speech-deps:
+	@echo "$(GREEN)Setting up speech recognition dependencies...$(RESET)"
+	@echo "$(BLUE)Ensuring PortAudio is available...$(RESET)"
+	@if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists portaudio-2.0; then \
+		echo "$(GREEN)✓ PortAudio found$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ PortAudio not found. Please install:$(RESET)"; \
+		echo "  $(CYAN)macOS:$(RESET) brew install portaudio"; \
+		echo "  $(CYAN)Ubuntu/Debian:$(RESET) sudo apt-get install portaudio19-dev"; \
+		echo "  $(CYAN)CentOS/RHEL:$(RESET) sudo yum install portaudio-devel"; \
+	fi
+	@echo "$(GREEN)✓ Speech dependencies check complete$(RESET)"
 
 # Default target
 .DEFAULT_GOAL := help

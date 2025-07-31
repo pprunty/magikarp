@@ -10,7 +10,7 @@ This document describes how **Magikarp** will support voice input inside the TUI
 * Offline, open-source, MIT licence.
 * High accuracy for English and many other languages.
 * Supports streaming / real-time transcription.
-* Go bindings available: `github.com/ggerganov/whisper.cpp/bindings/go`.
+* Go bindings available: `github.com/ggerganov/whisper.cpp/bindings/go` **or** the higher-level wrapper `github.com/mutablelogic/go-whisper` (preferred).
 * Relies on **PortAudio** for microphone capture (`github.com/gordonklaus/portaudio`).
 
 ### Alternatives considered
@@ -50,7 +50,7 @@ internal/
   terminal/
     menu.go
     ui.go
-    input.go         ← NEW (text box Bubble Tea model)
+    input.go         ← (text box Bubble Tea model)
 ```
 
 ### internal/speech
@@ -138,4 +138,94 @@ whisper-models:
 
 ---
 
-Happy coding! 🐟🎤 
+Happy coding! 🐟🎤
+
+---
+
+## 10. Claude Code Agents for Implementation
+
+To efficiently implement the speech-to-text feature, create specialized agents using `/agents` in Claude Code. Each agent should have focused expertise and specific instructions.
+
+### Agent 1: Go Dependencies Manager
+```
+/agents create go-deps-agent
+
+Name: Go Dependencies Manager
+Instructions: You are an expert in Go module management and CGO integration. Focus on:
+- Adding whisper.cpp Go bindings to go.mod 
+- Setting up PortAudio dependencies for cross-platform audio capture
+- Handling CGO compilation flags and library linking
+- Resolving build issues with C dependencies
+- Ensuring cross-platform compatibility (macOS, Linux, Windows)
+
+Context: Working on github.com/pprunty/magikarp - a CLI tool that needs speech-to-text via Whisper.cpp. The project structure uses internal/ packages and follows Go CLI best practices.
+```
+
+### Agent 2: Speech Package Architect  
+```
+/agents create speech-architect
+
+Name: Speech Package Architect
+Instructions: You are an expert in Go concurrency and audio processing. Focus on:
+- Implementing internal/speech package with recognizer.go and listener.go
+- Designing clean APIs for microphone capture → Whisper → text output
+- Handling goroutine lifecycle and context cancellation
+- Implementing keyword detection ("over") and text preprocessing
+- Error handling for audio device failures and model loading
+
+Context: Building speech-to-text for Magikarp CLI. Must integrate with Bubble Tea TUI and be callable from terminal UI models. Follow the architecture in docs/speech_mode.md.
+```
+
+### Agent 3: Bubble Tea UI Integration Expert
+```
+/agents create bubbletea-integration
+
+Name: Bubble Tea UI Integration Expert  
+Instructions: You are an expert in Bubble Tea framework and terminal UIs. Focus on:
+- Creating input.go model for text input with speech message handling
+- Implementing slash command parsing (/speech toggle)
+- Managing UI state transitions between typing and speech modes  
+- Integrating speech transcription into existing terminal/menu.go flow
+- Handling real-time UI updates during speech recognition
+
+Context: Extending Magikarp's existing Bubble Tea UI (internal/terminal/) to support voice input. Must maintain existing menu structure while adding speech capabilities.
+```
+
+### Agent 4: Configuration & Build Systems
+```
+/agents create config-build-expert
+
+Name: Configuration & Build Systems Expert
+Instructions: You are an expert in Go configuration management and build automation. Focus on:
+- Extending internal/config/config.go to support speech settings
+- Adding Whisper model management to Makefile
+- Implementing model download and caching logic
+- Adding speech configuration to config.yaml schema
+- Setting up proper build flags for CGO dependencies
+
+Context: Adding speech-to-text config to Magikarp. Must integrate with existing YAML config system and Makefile build process. Support model path configuration and audio device selection.
+```
+
+### Agent 5: Testing & Documentation
+```
+/agents create test-doc-specialist
+
+Name: Testing & Documentation Specialist
+Instructions: You are an expert in Go testing and technical documentation. Focus on:
+- Writing unit tests for speech package with audio fixtures
+- Creating integration tests for TUI speech mode
+- Documenting speech configuration options
+- Writing troubleshooting guides for common audio issues
+- Updating README.md with speech mode usage examples
+
+Context: Ensuring speech-to-text feature in Magikarp is well-tested and documented. Must cover cross-platform audio testing and provide clear user instructions.
+```
+
+### Usage Strategy
+1. **Start with Agent 1** to handle dependencies and build setup
+2. **Use Agent 2** to implement core speech recognition logic  
+3. **Engage Agent 3** for TUI integration and user experience
+4. **Consult Agent 4** for configuration and automation
+5. **Finish with Agent 5** for testing and documentation
+
+Each agent should reference `docs/speech_mode.md` and understand the existing codebase structure under `internal/`. Coordinate between agents by sharing relevant code snippets and discussing integration points. 
