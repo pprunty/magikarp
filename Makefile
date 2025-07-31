@@ -14,7 +14,7 @@ VERSION := $(shell grep '^version:' config.yaml | sed 's/version: *"*\([^"]*\)"*
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%I:%M:%S%p')
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
-.PHONY: help build run install clean fmt release whisper-models speech-deps whisper-cli whisper-model
+.PHONY: help build run install clean fmt release whisper-models speech-deps whisper-cli whisper-model build-speech run-speech install-speech
 
 ## Show this help message
 help:
@@ -33,28 +33,50 @@ help:
 	@echo "  $(YELLOW)whisper-cli$(RESET)  Install Whisper CLI"
 	@echo "  $(YELLOW)whisper-model$(RESET) Download base Whisper model"
 	@echo "  $(YELLOW)speech-deps$(RESET)   Setup speech recognition dependencies"
+	@echo "  $(YELLOW)build-speech$(RESET) Build binary with speech tag"
+	@echo "  $(YELLOW)run-speech$(RESET)   Run with speech tag"
+	@echo "  $(YELLOW)install-speech$(RESET) Install deps & build with speech tag"
 	@echo ""
 	@echo "$(BLUE)Usage: make [command]$(RESET)"
 
 ## Build the binary
 build:
+	@$(MAKE) _build TAGS=""
+
+## Build with speech tag
+build-speech:
+	@$(MAKE) _build TAGS="speech"
+
+_build:
 	@echo "$(GREEN)Building $(BINARY_NAME)...$(RESET)"
 	mkdir -p bin
-	go build -ldflags="-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME) -X main.Commit=$(COMMIT)" -o bin/$(BINARY_NAME) .
+	go build $(if $(TAGS),-tags $(TAGS),) -ldflags="-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME) -X main.Commit=$(COMMIT)" -o bin/$(BINARY_NAME) .
 	@echo "$(GREEN)✓ Build complete: bin/$(BINARY_NAME)$(RESET)"
 
 ## Run the application
 run:
+	@$(MAKE) _run TAGS=""
+
+## Run with speech tag
+run-speech:
+	@$(MAKE) _run TAGS="speech"
+
+_run:
 	@echo "$(GREEN)Running $(BINARY_NAME)...$(RESET)"
-	go run .
+	go run $(if $(TAGS),-tags $(TAGS),) .
 
 ## Install dependencies and build
 install:
+	@$(MAKE) _install TAGS=""
+
+## Install deps & build with speech tag
+install-speech:
+	@$(MAKE) _install TAGS="speech"
+
+_install:
 	@echo "$(GREEN)Downloading dependencies...$(RESET)"
 	go mod download
-	@echo "$(GREEN)Building $(BINARY_NAME)...$(RESET)"
-	mkdir -p bin
-	go build -ldflags="-X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME) -X main.Commit=$(COMMIT)" -o bin/$(BINARY_NAME) .
+	@$(MAKE) _build TAGS="$(TAGS)"
 	@echo "$(GREEN)✓ Installation complete: bin/$(BINARY_NAME)$(RESET)"
 
 ## Clean build artifacts
