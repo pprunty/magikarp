@@ -2,9 +2,11 @@ package terminal
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/pprunty/magikarp/internal/config"
 )
 
 // StartUI initializes and runs the Bubble Tea program
@@ -25,9 +27,17 @@ func StartUI() error {
 func startChatInput(provider string) error {
 	// Don't clear screen - let welcome box persist
 	
-	inputModel := NewInputModel(provider)
+	// Load configuration for speech functionality
+	cfg, err := config.LoadConfig("")
+	if err != nil {
+		log.Printf("Warning: Failed to load config, speech functionality may not work: %v", err)
+		cfg = &config.Config{} // Use empty config
+	}
+	
+	inputModel := NewInputModel(provider, cfg)
 	
 	for {
+		// Create a new program with message handling
 		p := tea.NewProgram(inputModel)
 
 		finalModel, err := p.Run()
@@ -35,7 +45,7 @@ func startChatInput(provider string) error {
 			return fmt.Errorf("failed to start chat input: %w", err)
 		}
 
-		// Check what happened with the input model
+		// Check what happened with the input model  
 		if m, ok := finalModel.(InputModel); ok {
 			if m.ShouldTriggerHelp() {
 				// Show help screen

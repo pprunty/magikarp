@@ -13,6 +13,7 @@ type Config struct {
 	Name      string                `yaml:"name"`
 	System    string                `yaml:"system"`
 	Providers map[string]Provider   `yaml:"providers"`
+	Speech    Speech                `yaml:"speech"`
 }
 
 // Provider represents an LLM provider configuration
@@ -20,6 +21,14 @@ type Provider struct {
 	Models      []string `yaml:"models"`
 	Temperature float64  `yaml:"temperature"`
 	Key         string   `yaml:"key"`
+}
+
+// Speech represents the speech-to-text configuration
+type Speech struct {
+	ModelPath  string `yaml:"model_path"`
+	SampleRate int    `yaml:"sample_rate"`
+	Keyword    string `yaml:"keyword"`
+	Enabled    bool   `yaml:"enabled"`
 }
 
 // LoadConfig loads configuration from the specified file path
@@ -44,6 +53,9 @@ func LoadConfig(configPath string) (*Config, error) {
 		provider.Key = os.ExpandEnv(provider.Key)
 		config.Providers[name] = provider
 	}
+
+	// Expand environment variables in speech model path
+	config.Speech.ModelPath = os.ExpandEnv(config.Speech.ModelPath)
 
 	return &config, nil
 }
@@ -73,6 +85,19 @@ func (c *Config) ValidateConfig() error {
 		}
 		if provider.Key == "" {
 			return fmt.Errorf("provider %s must have an API key", name)
+		}
+	}
+
+	// Validate speech configuration if enabled
+	if c.Speech.Enabled {
+		if c.Speech.ModelPath == "" {
+			return fmt.Errorf("speech model path is required when speech is enabled")
+		}
+		if c.Speech.SampleRate <= 0 {
+			return fmt.Errorf("speech sample rate must be positive")
+		}
+		if c.Speech.Keyword == "" {
+			return fmt.Errorf("speech keyword is required when speech is enabled")
 		}
 	}
 

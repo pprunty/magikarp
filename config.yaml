@@ -14,3 +14,8 @@ providers:
     temperature: 0.7
     key: ${GEMINI_API_KEY}
 system: "You are a helpful coding assistant."
+speech:
+  model_path: ~/.magikarp/models/ggml-small.en.bin
+  sample_rate: 16000
+  keyword: "over"
+  enabled: true
