@@ -1,0 +1,26 @@
+{
+  "name": "control_state",
+  "description": "Modifies Magikarp runtime state: toggles tools or speech mode, or switches to a different model/provider. Use this tool when the user explicitly requests actions such as 'turn tools on', 'disable speech mode', or 'ask <provider>'.",
+  "input_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string",
+        "description": "The operation to perform. One of: toggle_tools, toggle_speech, switch_model"
+      },
+      "value": {
+        "type": "string",
+        "description": "Optional value. For toggles use 'on'|'off'. For switch_model provide either a full model name or a provider alias (openai, anthropic, gemini, etc.)."
+      }
+    },
+    "required": ["action"],
+    "additionalProperties": false,
+    "examples": [
+      { "action": "toggle_tools", "value": "on" },
+      { "action": "toggle_speech", "value": "off" },
+      { "action": "switch_model", "value": "gemini" },
+      { "action": "switch_model", "value": "gpt-4o" }
+    ]
+  }
+} 

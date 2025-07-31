@@ -1,0 +1,30 @@
+{
+    "name": "bash",
+    "description": "Runs a Bash script (single-line or multi-line) on the local system. The script is executed via 'bash -c \"<script>\"'. Use this tool for typical macOS/Linux utilities such as 'date +%Z', 'ls -la', 'grep', etc. The tool blocks destructive or privileged commands for safety and automatically times-out long-running processes. It is NOT suitable for systemd-specific utilities like 'timedatectl' that may not exist on macOS.",
+    "input_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "script": {
+          "type": "string",
+          "description": "The bash script to execute. It is passed verbatim to 'bash -c'. Must not be empty."
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Optional timeout in seconds (default 30, max 300)."
+        },
+        "work_dir": {
+          "type": "string",
+          "description": "Optional working directory in which to run the script."
+        }
+      },
+      "required": ["script"],
+      "additionalProperties": false,
+      "examples": [
+        { "script": "date +%Z" },
+        { "script": "ls -la /tmp" },
+        { "script": "grep -i error app.log", "timeout": 60 },
+        { "script": "find . -name '*.go'", "work_dir": "/home/user/projects" }
+      ]
+    }
+  }

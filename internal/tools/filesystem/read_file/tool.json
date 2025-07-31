@@ -1,0 +1,52 @@
+{
+    "name": "read_file",
+    "description": "Reads the contents of a text file and returns either the raw content or a detailed response with metadata. This tool is designed to read UTF-8 encoded text files from the local filesystem, with configurable size limits to prevent memory issues. It provides options to include file statistics (size, line count, modification time) and can attempt to handle files with non-UTF-8 encoding. Use this tool when you need to examine the contents of configuration files, logs, source code, or any textual data stored in files. For security reasons, only local file paths are allowed. Files exceeding the maximum size limit will not be read.",
+    "input_schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Required. The local file path to read. Must be a valid local path to a text file (e.g., './config.txt', '/path/to/log.txt', or 'C:\\path\\to\\file.txt' on Windows). The tool will attempt case-insensitive matching if the exact path is not found."
+        },
+        "max_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "description": "Optional. Maximum file size in bytes that will be read. Defaults to 100,000 bytes (100 KB). Files larger than this will trigger an error. The hard maximum is 1,000,000 bytes (1 MB) regardless of the value provided."
+        },
+        "detect_encoding": {
+          "type": "boolean",
+          "description": "Optional. When set to true, the tool will attempt to read files even if they contain invalid UTF-8 sequences. This is useful for reading files with different encodings, though the results may contain replacement characters for bytes that cannot be interpreted as UTF-8. Defaults to false."
+        },
+        "include_stats": {
+          "type": "boolean",
+          "description": "Optional. When set to true, the tool returns a JSON object containing both the file content and additional metadata such as file size, line count, modification time, and content hash. This is useful for getting context about the file alongside its contents. Defaults to false."
+        }
+      },
+      "required": ["path"],
+      "additionalProperties": false,
+      "examples": [
+        {
+          "path": "./config.json"
+        },
+        {
+          "path": "/etc/hosts",
+          "include_stats": true
+        },
+        {
+          "path": "./logs/app.log",
+          "max_size": 500000
+        },
+        {
+          "path": "./binary_data.bin",
+          "detect_encoding": true
+        },
+        {
+          "path": "./source_code.py",
+          "include_stats": true,
+          "max_size": 200000
+        }
+      ]
+    }
+  }

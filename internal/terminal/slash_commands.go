@@ -3,6 +3,9 @@ package terminal
 import (
 	"os"
 	"strings"
+
+	cfg "github.com/pprunty/magikarp/internal/config"
+	"github.com/pprunty/magikarp/internal/orchestration"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,6 +22,7 @@ func GetAvailableCommands() []SlashCommand {
 		{Name: "/help", Description: "Show help information"},
 		{Name: "/model", Description: "Switch between AI models"},
 		{Name: "/speech", Description: "Toggle speech mode on/off"},
+		{Name: "/tools", Description: "Toggle tools on/off"},
 	}
 }
 
@@ -31,37 +35,36 @@ type ConfigYAML struct {
 
 // GetAvailableModels returns the list of available AI models from config.yaml
 func GetAvailableModels() []string {
-	// Try to find and read config.yaml
+	// Load configuration once
 	configPath := findConfigFile()
-	if configPath == "" {
-		// Fallback to hardcoded models if config not found
-		return []string{"claude-3-5-sonnet-20240620", "gpt-4o", "gemini-pro"}
+	var conf *cfg.Config
+	if path := configPath; path != "" {
+		data, err := os.ReadFile(path)
+		if err == nil {
+			if err2 := yaml.Unmarshal(data, &conf); err2 == nil {
+				// Expand env vars using existing helper
+				// but easier: load via cfg.LoadConfig which handles expansion
+			}
+		}
 	}
 
-	data, err := os.ReadFile(configPath)
+	// Simpler – just load via cfg.LoadConfig API which already does env expansion/validation
+	c, err := cfg.LoadConfig(configPath)
 	if err != nil {
-		// Fallback on read error
+		// fallback to default list
 		return []string{"claude-3-5-sonnet-20240620", "gpt-4o", "gemini-pro"}
 	}
 
-	var config ConfigYAML
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		// Fallback on parse error
+	// Initialise registry; ignore errors – we only care about available models
+	_ = orchestration.Init(c)
+
+	// Collect models that have a registered provider
+	models := orchestration.Models()
+
+	if len(models) == 0 {
 		return []string{"claude-3-5-sonnet-20240620", "gpt-4o", "gemini-pro"}
 	}
-
-	// Collect all models from all providers
-	var allModels []string
-	for _, provider := range config.Providers {
-		allModels = append(allModels, provider.Models...)
-	}
-
-	if len(allModels) == 0 {
-		// Fallback if no models found
-		return []string{"claude-3-5-sonnet-20240620", "gpt-4o", "gemini-pro"}
-	}
-
-	return allModels
+	return models
 }
 
 // FilterCommands filters slash commands based on the input text
@@ -69,22 +72,22 @@ func FilterCommands(input string) []SlashCommand {
 	if input == "/" || input == "" {
 		return GetAvailableCommands()
 	}
-	
+
 	// Remove the leading "/" for filtering
 	filterText := strings.ToLower(strings.TrimPrefix(input, "/"))
 	allCommands := GetAvailableCommands()
 	var filtered []SlashCommand
-	
+
 	for _, cmd := range allCommands {
 		// Check if command name (without /) contains the filter text
 		cmdName := strings.ToLower(strings.TrimPrefix(cmd.Name, "/"))
 		cmdDesc := strings.ToLower(cmd.Description)
-		
+
 		if strings.Contains(cmdName, filterText) || strings.Contains(cmdDesc, filterText) {
 			filtered = append(filtered, cmd)
 		}
 	}
-	
+
 	return filtered
 }
 

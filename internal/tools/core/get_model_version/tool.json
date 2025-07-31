@@ -1,0 +1,20 @@
+{
+  "name": "get_model_version",
+  "description": "Return the exact identifier (version tag) of the model currently selected by the user.",
+  "input_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "examples": [
+    {
+      "input": {},
+      "output": "claude-sonnet-4-20250514"
+    },
+    {
+      "input": {},
+      "output": "gpt-4o-mini"
+    }
+  ]
+} 
