@@ -50,7 +50,7 @@ func build(cfg *config.Config) error {
 	if pCfg, ok := cfg.Providers["anthropic"]; ok {
 		if pCfg.Key != "" && pCfg.Key != "${ANTHROPIC_API_KEY}" {
 			for _, m := range pCfg.Models {
-				client := anthropic.New(pCfg.Key, []string{m})
+				client := anthropic.New(pCfg.Key, []string{m}, pCfg.Temperature, cfg.System)
 				modelToProvider[m] = client
 			}
 		} else {

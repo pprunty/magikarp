@@ -41,18 +41,22 @@ func debugLog(format string, args ...interface{}) {
 
 // AnthropicClient implements the Provider interface for Anthropic
 type AnthropicClient struct {
-	client *anthropic.Client
-	apiKey string
-	models []string
+	client       *anthropic.Client
+	apiKey       string
+	models       []string
+	temperature  float64
+	systemPrompt string
 }
 
 // New creates a new Anthropic provider
-func New(apiKey string, models []string) *AnthropicClient {
+func New(apiKey string, models []string, temperature float64, systemPrompt string) *AnthropicClient {
 	client := anthropic.NewClient(option.WithAPIKey(apiKey))
 	return &AnthropicClient{
-		client: &client,
-		apiKey: apiKey,
-		models: models,
+		client:       &client,
+		apiKey:       apiKey,
+		models:       models,
+		temperature:  temperature,
+		systemPrompt: systemPrompt,
 	}
 }
 
@@ -63,7 +67,7 @@ func NewAnthropicClient(model string, configPath string) (*AnthropicClient, erro
 		return nil, fmt.Errorf("ANTHROPIC_API_KEY environment variable is not set")
 	}
 
-	return New(os.Getenv("ANTHROPIC_API_KEY"), []string{model}), nil
+	return New(os.Getenv("ANTHROPIC_API_KEY"), []string{model}, 0.0, ""), nil
 }
 
 // Name returns the name of the provider
@@ -77,10 +81,13 @@ func (c *AnthropicClient) Chat(ctx context.Context, messages []providers.ChatMes
 	// Convert messages to Anthropic format
 	anthropicMessages := make([]anthropic.MessageParam, 0)
 
-	systemPrompt := ""
+	systemPrompt := c.systemPrompt
 	for _, msg := range messages {
 		if msg.Role == providers.RoleSystem {
-			// Skip system messages for now - Anthropic handles them differently
+			// Use system message from conversation if provided, otherwise use config
+			if msg.Content != "" {
+				systemPrompt = msg.Content
+			}
 			continue
 		} else if msg.Role == providers.RoleUser {
 			anthropicMessages = append(anthropicMessages, anthropic.NewUserMessage(anthropic.NewTextBlock(msg.Content)))
@@ -128,11 +135,12 @@ func (c *AnthropicClient) Chat(ctx context.Context, messages []providers.ChatMes
 
 	// Send request to Anthropic
 	message, err := c.client.Messages.New(ctx, anthropic.MessageNewParams{
-		Model:     anthropic.Model(model),
-		MaxTokens: 1024,
-		Messages:  anthropicMessages,
-		Tools:     anthropicTools,
-		System:    systemBlocks,
+		Model:       anthropic.Model(model),
+		MaxTokens:   1024,
+		Messages:    anthropicMessages,
+		Tools:       anthropicTools,
+		System:      systemBlocks,
+		Temperature: anthropic.Float(c.temperature),
 	})
 	if err != nil {
 		debugLog("Chat error: %v", err)
@@ -166,14 +174,16 @@ func (c *AnthropicClient) Chat(ctx context.Context, messages []providers.ChatMes
 func (c *AnthropicClient) StreamChat(ctx context.Context, model string, messages []providers.ChatMessage, temperature float64) (<-chan string, error) {
 	// Convert messages to Anthropic format
 	anthropicMessages := make([]anthropic.MessageParam, 0)
-	systemPrompt := ""
+	systemPrompt := c.systemPrompt
 
 	debugLog("StreamChat: model=%s, temperature=%f, total_messages=%d", model, temperature, len(messages))
 
 	for _, msg := range messages {
 		if msg.Role == providers.RoleSystem {
-			// capture system prompt; Anthropic expects it separately
-			systemPrompt = msg.Content
+			// Use system message from conversation if provided, otherwise use config
+			if msg.Content != "" {
+				systemPrompt = msg.Content
+			}
 			continue
 		} else if msg.Role == providers.RoleUser {
 			anthropicMessages = append(anthropicMessages, anthropic.NewUserMessage(anthropic.NewTextBlock(msg.Content)))
