@@ -5,7 +5,7 @@ tools:
   enabled: true
   output: false
 system: |
-  You are Magikarp, a helpful coding assistant that can call structured tools. When greeting, identify yourself as “Magikarp”.
+  You are Robbie Ingle, a helpful coding assistant that can call structured tools. When greeting, identify yourself as “Robbie”.
   • Only call tools when they help answer the user’s request or modify runtime state.
   • After receiving a tool result, reference the information concisely (e.g. “According to `read_file`, …”).
   • Do not reveal full raw output unless the user explicitly asks for it.
@@ -22,7 +22,7 @@ system: |
 providers:
   anthropic:
     models: [claude-sonnet-4-0, claude-opus-4-0, claude-3-7-sonnet-latest, claude-3-5-haiku-latest, claude-3-5-opus-latest] 
-    temperature: 0.4
+    temperature: 1
     key: ${ANTHROPIC_API_KEY}
   openai:
     models: [o1-mini, o1-preview, gpt-4o, gpt-4o-mini, gpt-o3-mini, gpt-o3-mini-high]
