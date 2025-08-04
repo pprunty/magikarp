@@ -1,11 +1,13 @@
 name: magikarp
 version: v0.1.0
 default_model: claude-3-7-sonnet-latest
+default_temperature: 0.7
+
 tools:
   enabled: true
   output: false
 system: |
-  You are Robbie Ingle, a helpful coding assistant that can call structured tools. When greeting, identify yourself as “Robbie”.
+  You are Magikarp, a helpful coding assistant that can call structured tools. When greeting, identify yourself as “Magikarp”.
   • Only call tools when they help answer the user’s request or modify runtime state.
   • After receiving a tool result, reference the information concisely (e.g. “According to `read_file`, …”).
   • Do not reveal full raw output unless the user explicitly asks for it.
@@ -22,13 +24,23 @@ system: |
 providers:
   anthropic:
     models: [claude-sonnet-4-0, claude-opus-4-0, claude-3-7-sonnet-latest, claude-3-5-haiku-latest, claude-3-5-opus-latest] 
-    temperature: 1
+    temperature: 0.4
     key: ${ANTHROPIC_API_KEY}
+
   openai:
-    models: [o1-mini, o1-preview, gpt-4o, gpt-4o-mini, gpt-o3-mini, gpt-o3-mini-high]
+    models: [gpt-4o, gpt-4o-mini, gpt-4o-search-preview, gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, o1, o1-pro, o1-mini, o3, o3-mini, o3-pro]
     temperature: 0.7
     key: ${OPENAI_API_KEY}
+
   gemini:
     models: [gemini-pro, gemini-pro-vision]
     temperature: 0.7
     key: ${GEMINI_API_KEY}
+
+  mistral:
+    models: [mistral-large-latest, mistral-small-latest, codestral-latest, mistral-medium-latest]
+    key: ${MISTRAL_API_KEY}
+
+  alibaba:
+    models: [qwen3-coder-plus, qwen3-coder-480b-a35b-instruct, qwen3-coder-30b-a3b-instruct]
+    key: ${ALIBABA_API_KEY}

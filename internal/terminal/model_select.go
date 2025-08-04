@@ -1,31 +1,99 @@
 package terminal
 
 import (
+	"sort"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
+
+// TreeItem represents an item in the tree structure
+type TreeItem struct {
+	Text      string // Display text
+	Value     string // Actual value (model name or empty for providers)
+	IsProvider bool   // True if this is a provider header
+	IsLast     bool   // True if this is the last model in a provider group
+}
 
 // ModelSelectModel represents the full-screen model selection interface
 type ModelSelectModel struct {
 	width          int
 	height         int
 	cursor         int
-	availableModels []string
+	treeItems      []TreeItem
 	selectedModel  string
 	quitting       bool
 }
 
 // NewModelSelectModel creates a new model selection model
 func NewModelSelectModel() ModelSelectModel {
-	models := GetAvailableModels()
-	return ModelSelectModel{
-		width:          80,
-		height:         24,
-		cursor:         0,
-		availableModels: models,
-		selectedModel:  "",
-		quitting:       false,
+	treeItems := buildTreeItems()
+	
+	// Find the first selectable model (not a provider header) 
+	initialCursor := 0
+	for i, item := range treeItems {
+		if !item.IsProvider {
+			initialCursor = i
+			break
+		}
 	}
+	
+	return ModelSelectModel{
+		width:       80,
+		height:      24,
+		cursor:      initialCursor,
+		treeItems:   treeItems,
+		selectedModel: "",
+		quitting:    false,
+	}
+}
+
+// buildTreeItems creates the tree structure from available models
+func buildTreeItems() []TreeItem {
+	providerModels := GetAvailableModelsByProvider()
+	var items []TreeItem
+	
+	// Sort provider names for consistent display
+	providerNames := make([]string, 0, len(providerModels))
+	for providerName := range providerModels {
+		providerNames = append(providerNames, providerName)
+	}
+	sort.Strings(providerNames)
+	
+	for _, providerName := range providerNames {
+		models := providerModels[providerName]
+		
+		// Add provider header
+		items = append(items, TreeItem{
+			Text:       providerName,
+			Value:      "",
+			IsProvider: true,
+			IsLast:     false,
+		})
+		
+		// Sort models within provider
+		sort.Strings(models)
+		
+		// Add models under provider
+		for i, model := range models {
+			isLast := i == len(models)-1
+			var prefix string
+			if isLast {
+				prefix = "└── "
+			} else {
+				prefix = "├── "
+			}
+			
+			items = append(items, TreeItem{
+				Text:       prefix + model,
+				Value:      model,
+				IsProvider: false,
+				IsLast:     isLast,
+			})
+		}
+	}
+	
+	return items
 }
 
 // Init initializes the model selection model
@@ -42,21 +110,41 @@ func (m ModelSelectModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "up", "k":
-			m.cursor--
-			if m.cursor < 0 {
-				m.cursor = len(m.availableModels) - 1
+			// Move up, skipping provider headers
+			originalCursor := m.cursor
+			for {
+				m.cursor--
+				if m.cursor < 0 {
+					m.cursor = len(m.treeItems) - 1
+				}
+				// Stop if we're on a selectable item (model) or if we've looped back to start
+				if m.cursor < len(m.treeItems) && (!m.treeItems[m.cursor].IsProvider || m.cursor == originalCursor) {
+					break
+				}
 			}
 		case "down", "j":
-			m.cursor++
-			if m.cursor >= len(m.availableModels) {
-				m.cursor = 0
+			// Move down, skipping provider headers
+			originalCursor := m.cursor
+			for {
+				m.cursor++
+				if m.cursor >= len(m.treeItems) {
+					m.cursor = 0
+				}
+				// Stop if we're on a selectable item (model) or if we've looped back to start
+				if m.cursor < len(m.treeItems) && (!m.treeItems[m.cursor].IsProvider || m.cursor == originalCursor) {
+					break
+				}
 			}
 		case "enter":
-			if len(m.availableModels) > 0 && m.cursor < len(m.availableModels) {
-				m.selectedModel = m.availableModels[m.cursor]
+			if len(m.treeItems) > 0 && m.cursor < len(m.treeItems) {
+				item := m.treeItems[m.cursor]
+				// Only select if it's a model (not a provider header)
+				if !item.IsProvider && item.Value != "" {
+					m.selectedModel = item.Value
+					m.quitting = true
+					return m, tea.Quit
+				}
 			}
-			m.quitting = true
-			return m, tea.Quit
 		case "esc", "q":
 			m.quitting = true
 			return m, tea.Quit
@@ -84,14 +172,20 @@ func (m ModelSelectModel) View() string {
 	// Version display
 	s += " " + versionStyle.Render(GetVersionDisplay()) + "\n\n"
 
-	// Model list
-	for i, model := range m.availableModels {
-		if i == m.cursor {
-			// Highlighted/selected model
-			s += modelSelectActiveStyle.Render("  "+model) + "\n"
+	// Tree structure
+	for i, item := range m.treeItems {
+		if item.IsProvider {
+			// Provider header (always white, never highlighted)
+			s += modelSelectProviderStyle.Render("  "+item.Text) + "\n"
 		} else {
-			// Normal model
-			s += modelSelectNormalStyle.Render("  "+model) + "\n"
+			// Model item
+			if i == m.cursor {
+				// Highlighted/selected model
+				s += modelSelectActiveStyle.Render("  "+item.Text) + "\n"
+			} else {
+				// Normal model
+				s += modelSelectNormalStyle.Render("  "+item.Text) + "\n"
+			}
 		}
 	}
 
@@ -111,6 +205,10 @@ func (m ModelSelectModel) View() string {
 var (
 	modelSelectHeaderStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#04B575")).
+		Bold(true)
+
+	modelSelectProviderStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFFFFF")).
 		Bold(true)
 
 	modelSelectActiveStyle = lipgloss.NewStyle().

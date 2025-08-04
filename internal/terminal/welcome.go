@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pprunty/magikarp/internal/config"
+	"github.com/pprunty/magikarp/internal/orchestration"
 )
 
 // renderWelcomeBox creates the Claude Code-style welcome box
@@ -15,14 +17,14 @@ func renderWelcomeBox() string {
 		cwd = "unknown"
 	}
 
-	// Check API key status
-	apiKeyStatus := getAPIKeyStatus()
+	// Check provider status
+	providerStatus := getProviderStatus()
 
 	// Style the content with gray for subtitle and cwd
 	content := "△ Welcome to Magikarp!\n\n"
 	content += grayTextStyle.Render("  AI coding assistant with multiple LLM providers") + "\n\n"
 	content += grayTextStyle.Render("  cwd: "+cwd) + "\n\n"
-	content += apiKeyStatus
+	content += providerStatus
 
 	// Calculate dynamic width based on content - need to account for new API key lines
 	lines := strings.Split(content, "\n")
@@ -47,40 +49,89 @@ func renderWelcomeBox() string {
 	return style.Render(content)
 }
 
-// getAPIKeyStatus returns formatted API key status with aligned indicators
-func getAPIKeyStatus() string {
-	apiKeys := []struct {
+// getProviderStatus returns formatted provider status with grid layout
+func getProviderStatus() string {
+	providers := []struct {
 		name string
 		env  string
 	}{
 		{"Anthropic", "ANTHROPIC_API_KEY"},
 		{"OpenAI", "OPENAI_API_KEY"},
 		{"Gemini", "GEMINI_API_KEY"},
+		{"Mistral", "MISTRAL_API_KEY"},
+		{"Alibaba", "ALIBABA_API_KEY"},
 	}
 
+	// Get actual provider initialization status
+	providerInitStatus := getActualProviderStatus()
+
 	var status []string
-	const alignmentWidth = 15 // Width for provider name alignment
+	const colWidth = 20 // Width for each column
 
-	for _, key := range apiKeys {
-		// Create the provider name with colon in gray
-		providerPart := grayTextStyle.Render(key.name + ":")
-
-		// Calculate padding for alignment
-		padding := alignmentWidth - len(key.name) - 1 // -1 for the colon
-		if padding < 0 {
-			padding = 1 // At least one space
+	// Create grid layout (2 columns)
+	for i := 0; i < len(providers); i += 2 {
+		line := "  "
+		
+		// First column
+		provider1 := providers[i]
+		name1 := grayTextStyle.Render(provider1.name + ":")
+		padding1 := colWidth - len(provider1.name) - 1
+		if padding1 < 1 {
+			padding1 = 1
 		}
-		paddingStr := strings.Repeat(" ", padding)
-
-		// Add status indicator
-		if os.Getenv(key.env) != "" {
-			status = append(status, "  "+providerPart+paddingStr+setKeyStyle.Render("✓"))
+		
+		var indicator1 string
+		if isInitialized, exists := providerInitStatus[strings.ToLower(provider1.name)]; exists && isInitialized {
+			indicator1 = setKeyStyle.Render("✓")
 		} else {
-			status = append(status, "  "+providerPart+paddingStr+unsetKeyStyle.Render("✗"))
+			indicator1 = unsetKeyStyle.Render("✗")
 		}
+		
+		line += name1 + strings.Repeat(" ", padding1) + indicator1
+		
+		// Second column (if exists)
+		if i+1 < len(providers) {
+			provider2 := providers[i+1]
+			name2 := grayTextStyle.Render(provider2.name + ":")
+			padding2 := colWidth - len(provider2.name) - 1
+			if padding2 < 1 {
+				padding2 = 1
+			}
+			
+			var indicator2 string
+			if isInitialized, exists := providerInitStatus[strings.ToLower(provider2.name)]; exists && isInitialized {
+				indicator2 = setKeyStyle.Render("✓")
+			} else {
+				indicator2 = unsetKeyStyle.Render("✗")
+			}
+			
+			line += "    " + name2 + strings.Repeat(" ", padding2) + indicator2
+		}
+		
+		status = append(status, line)
 	}
 
 	return strings.Join(status, "\n")
+}
+
+// getActualProviderStatus gets the real initialization status from the registry
+func getActualProviderStatus() map[string]bool {
+	// Try to load config and get provider status
+	configPath := findConfigFile()
+	if configPath == "" {
+		return make(map[string]bool) // Return empty if no config
+	}
+	
+	cfg, err := config.LoadConfig(configPath)
+	if err != nil {
+		return make(map[string]bool) // Return empty if config load fails
+	}
+	
+	// Initialize the registry (this is safe to call multiple times)
+	_ = orchestration.Init(cfg)
+	
+	// Get actual provider status from registry
+	return orchestration.GetInitializedProviders(cfg)
 }
 
 // stripANSIForWidth removes ANSI escape sequences for length calculations

@@ -16,6 +16,9 @@ type Config struct {
 	// DefaultModel is the model that should be selected when Magikarp starts.
 	// If empty, the first registered model will be used instead.
 	DefaultModel string `yaml:"default_model"`
+	// DefaultTemperature is the global default temperature for all providers.
+	// Individual providers can override this by specifying their own temperature.
+	DefaultTemperature float64 `yaml:"default_temperature"`
 	// Tools groups all tool related configuration (enabled/visibility)
 	Tools     ToolsConfig         `yaml:"tools"`
 	Providers map[string]Provider `yaml:"providers"`
@@ -70,6 +73,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
+
+	// Expand environment variables in system prompt
+	config.System = os.ExpandEnv(config.System)
 
 	// Expand environment variables in API keys
 	for name, provider := range config.Providers {
@@ -136,3 +142,13 @@ func (c *Config) ValidateConfig() error {
 
 	return nil
 }
+
+// GetEffectiveTemperature returns the temperature to use for a given provider.
+// If the provider has a specific temperature set, it uses that; otherwise, it uses the global default.
+func (c *Config) GetEffectiveTemperature(providerName string) float64 {
+	if provider, ok := c.Providers[providerName]; ok && provider.Temperature != 0 {
+		return provider.Temperature
+	}
+	return c.DefaultTemperature
+}
+

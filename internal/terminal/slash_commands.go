@@ -67,6 +67,27 @@ func GetAvailableModels() []string {
 	return models
 }
 
+// GetAvailableModelsByProvider returns models grouped by provider
+func GetAvailableModelsByProvider() map[string][]string {
+	// Load configuration
+	configPath := findConfigFile()
+	c, err := cfg.LoadConfig(configPath)
+	if err != nil {
+		// fallback to default grouping
+		return map[string][]string{
+			"anthropic": {"claude-3-5-sonnet-20240620"},
+			"openai":    {"gpt-4o"},
+			"gemini":    {"gemini-pro"},
+		}
+	}
+
+	// Initialize registry to get available models
+	_ = orchestration.Init(c)
+
+	// Get models grouped by provider
+	return orchestration.ModelsByProvider(c)
+}
+
 // FilterCommands filters slash commands based on the input text
 func FilterCommands(input string) []SlashCommand {
 	if input == "/" || input == "" {

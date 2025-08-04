@@ -13,22 +13,26 @@ import (
 
 // GeminiClient implements the Provider interface for Google's Gemini
 type GeminiClient struct {
-	client *genai.Client
-	apiKey string
-	models []string
+	client       *genai.Client
+	apiKey       string
+	models       []string
+	temperature  float64
+	systemPrompt string
 }
 
 // New creates a new Gemini provider
-func New(apiKey string, models []string) (*GeminiClient, error) {
+func New(apiKey string, models []string, temperature float64, systemPrompt string) (*GeminiClient, error) {
 	client, err := genai.NewClient(context.Background(), option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
 	}
 
 	return &GeminiClient{
-		client: client,
-		apiKey: apiKey,
-		models: models,
+		client:       client,
+		apiKey:       apiKey,
+		models:       models,
+		temperature:  temperature,
+		systemPrompt: systemPrompt,
 	}, nil
 }
 
@@ -39,7 +43,7 @@ func NewGeminiClient(model string, configPath string) (*GeminiClient, error) {
 		return nil, fmt.Errorf("GEMINI_API_KEY environment variable is not set")
 	}
 
-	client, err := New(os.Getenv("GEMINI_API_KEY"), []string{model})
+	client, err := New(os.Getenv("GEMINI_API_KEY"), []string{model}, 0.0, "")
 	return client, err
 }
 
@@ -58,13 +62,18 @@ func (c *GeminiClient) Chat(ctx context.Context, messages []providers.ChatMessag
 
 	// Get the model
 	model := c.client.GenerativeModel(modelName)
+	temp32 := float32(c.temperature)
+	model.Temperature = &temp32
 
 	// Convert messages to Gemini format
 	geminiMessages := make([]*genai.Content, 0)
-	systemPrompt := ""
+	systemPrompt := c.systemPrompt
 	for _, msg := range messages {
 		if msg.Role == providers.RoleSystem {
-			systemPrompt = msg.Content
+			// Use system message from conversation if provided, otherwise use config
+			if msg.Content != "" {
+				systemPrompt = msg.Content
+			}
 			continue
 		}
 
@@ -146,10 +155,13 @@ func (c *GeminiClient) StreamChat(ctx context.Context, model string, messages []
 
 	// Convert messages to Gemini format
 	geminiMessages := make([]*genai.Content, 0)
-	systemPrompt := ""
+	systemPrompt := c.systemPrompt
 	for _, msg := range messages {
 		if msg.Role == providers.RoleSystem {
-			systemPrompt = msg.Content
+			// Use system message from conversation if provided, otherwise use config
+			if msg.Content != "" {
+				systemPrompt = msg.Content
+			}
 			continue
 		}
 

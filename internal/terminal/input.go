@@ -268,6 +268,12 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				inputDebugLog("Enter pressed in slash command mode")
 				if len(m.filteredCommands) > 0 && m.slashCommandCursor < len(m.filteredCommands) {
 					selectedCommand := m.filteredCommands[m.slashCommandCursor]
+					
+					// Save the slash command to history before executing it
+					if m.historyManager != nil {
+						m.historyManager.AddMessage(selectedCommand.Name)
+					}
+					
 					m.showingSlashCommands = false
 					m.textInput.SetValue("")
 

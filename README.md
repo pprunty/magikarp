@@ -81,6 +81,7 @@ export MISTRAL_API_KEY="your-mistral-key"
 - **OpenAI (GPT):** <https://platform.openai.com/account/api-keys>
 - **Google Gemini (AI Studio):** <https://makersuite.google.com/app/apikey> (create an API key in Google AI Studio)
 - **Mistral AI:** <https://console.mistral.ai/api-keys>
+- **Alibaba:** <https://www.alibabacloud.com/help/en/model-studio/first-api-call-to-qwen>
 
 ## Feature Checklist
 
