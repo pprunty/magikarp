@@ -2,9 +2,9 @@
 
 An open-source coding assistant CLI tool built with Go. Magikarp provides an interactive terminal interface for AI-powered coding assistance with support for multiple LLM providers (Claude, GPT, Gemini, Mistral).
 
-This project's journey will be document over on Subtack as part of my [Build Your Own Claude Code](https://furrycircuits.io) series. Stay tuned!
+![v0.1.1.png](./assets/alt.png)
 
-![v0.1.0.png](./assets/v0.1.0.webp)
+> This project's journey will be document over on Subtack as part of my [Build Your Own Claude Code](https://furrycircuits.io) series. Stay tuned!
 
 
 ## Prerequisites

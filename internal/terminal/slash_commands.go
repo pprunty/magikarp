@@ -18,6 +18,7 @@ type SlashCommand struct {
 // GetAvailableCommands returns the list of available slash commands in alphabetical order
 func GetAvailableCommands() []SlashCommand {
 	return []SlashCommand{
+		{Name: "/compress", Description: "Clear conversation history but keep a summary in context. Optional: /compress [instructions for summarization]"},
 		{Name: "/exit", Description: "Exit Magikarp"},
 		{Name: "/help", Description: "Show help information"},
 		{Name: "/model", Description: "Switch between AI models"},

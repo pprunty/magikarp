@@ -16,10 +16,10 @@ var (
 	itemStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#FFFFFF"))
 
-	helpStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#626262"))
-
 	quitTextStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#04B575")).
 		Bold(true)
+	
+	helpStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#626262"))
 )

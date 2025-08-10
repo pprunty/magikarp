@@ -9,10 +9,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// PromptsConfig represents the prompts configuration section
+type PromptsConfig struct {
+	System   string `yaml:"system"`
+	Compress string `yaml:"compress"`
+}
+
 // Config represents the application configuration
 type Config struct {
-	Name   string `yaml:"name"`
-	System string `yaml:"system"`
+	Name string `yaml:"name"`
+	// Prompts contains system and compress prompts
+	Prompts PromptsConfig `yaml:"prompts"`
 	// DefaultModel is the model that should be selected when Magikarp starts.
 	// If empty, the first registered model will be used instead.
 	DefaultModel string `yaml:"default_model"`
@@ -21,6 +28,8 @@ type Config struct {
 	DefaultTemperature float64 `yaml:"default_temperature"`
 	// Tools groups all tool related configuration (enabled/visibility)
 	Tools     ToolsConfig         `yaml:"tools"`
+	// Terminal groups terminal UI related configuration
+	Terminal  TerminalConfig      `yaml:"terminal"`
 	Providers map[string]Provider `yaml:"providers"`
 }
 
@@ -35,6 +44,11 @@ type Provider struct {
 type ToolsConfig struct {
 	Enabled bool `yaml:"enabled"`
 	Output  bool `yaml:"output"`
+}
+
+// TerminalConfig represents terminal UI configuration
+type TerminalConfig struct {
+	DetailProviders bool `yaml:"detail_providers"`
 }
 
 // LoadConfig loads configuration from the specified file path
@@ -74,8 +88,9 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Expand environment variables in system prompt
-	config.System = os.ExpandEnv(config.System)
+	// Expand environment variables in prompts
+	config.Prompts.System = os.ExpandEnv(config.Prompts.System)
+	config.Prompts.Compress = os.ExpandEnv(config.Prompts.Compress)
 
 	// Expand environment variables in API keys
 	for name, provider := range config.Providers {

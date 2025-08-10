@@ -385,7 +385,7 @@ func (m InputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Start async AI processing and spinner
 				return m, tea.Batch(
 					func() tea.Msg { return processingMsg{} },
-					processMessageAsync(userMessage, m.provider),
+					processMessageAsync(userMessage, m.provider, m.conversation),
 					spinnerTickCmd(),
 				)
 			}
@@ -559,6 +559,8 @@ func (m *InputModel) navigateHistory(direction int) {
 		m.historyIndex = -1
 		// Show original input when going before history
 		m.textInput.SetValue(m.originalInput)
+		// Position cursor at the start to prevent slash command dropdown from triggering
+		m.textInput.CursorStart()
 		m.inHistoryMode = false
 		return
 	} else if m.historyIndex >= historyCount {
@@ -573,6 +575,8 @@ func (m *InputModel) navigateHistory(direction int) {
 	if m.historyIndex >= 0 {
 		historyMessage := m.historyManager.GetMessageAt(m.historyIndex)
 		m.textInput.SetValue(historyMessage)
+		// Position cursor at the start to prevent slash command dropdown from triggering
+		m.textInput.CursorStart()
 	}
 }
 
@@ -772,7 +776,7 @@ func init() {
 }
 
 // processMessageAsync processes a user message with the AI provider asynchronously
-func processMessageAsync(userMessage, provider string) tea.Cmd {
+func processMessageAsync(userMessage, provider string, conversation []ConversationPair) tea.Cmd {
 	return func() tea.Msg {
 		// Get provider instance
 		p, err := orchestration.ProviderFor(provider)
@@ -785,17 +789,40 @@ func processMessageAsync(userMessage, provider string) tea.Cmd {
 
 		// Load system prompt – prefer value from loaded config.yaml
 		sysPrompt := "You are a helpful coding assistant."
-		if globalConfig != nil && globalConfig.System != "" {
-			sysPrompt = globalConfig.System
+		if globalConfig != nil && globalConfig.Prompts.System != "" {
+			sysPrompt = globalConfig.Prompts.System
 		}
 
 		inputDebugLog("System prompt used: %s", sysPrompt)
 
-		// Build messages
+		// Build messages with conversation history
 		messages := []providers.ChatMessage{
 			{Role: providers.RoleSystem, Content: sysPrompt},
-			{Role: providers.RoleUser, Content: userMessage},
 		}
+
+		// Convert conversation history to provider messages format
+		for _, pair := range conversation {
+			// Add user message
+			if pair.UserMessage != "" {
+				messages = append(messages, providers.ChatMessage{
+					Role:    providers.RoleUser,
+					Content: pair.UserMessage,
+				})
+			}
+			// Add AI response if available and not processing
+			if pair.AIResponse != "" && !pair.IsProcessing {
+				messages = append(messages, providers.ChatMessage{
+					Role:    providers.RoleAssistant,
+					Content: pair.AIResponse,
+				})
+			}
+		}
+
+		// Add current user message
+		messages = append(messages, providers.ChatMessage{
+			Role:    providers.RoleUser,
+			Content: userMessage,
+		})
 
 		// Get tools if enabled
 		var providerTools []providers.Tool

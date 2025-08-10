@@ -41,7 +41,7 @@ func build(cfg *config.Config) error {
 		if pCfg.Key != "" && pCfg.Key != "${OPENAI_API_KEY}" {
 			temperature := cfg.GetEffectiveTemperature("openai")
 			for _, m := range pCfg.Models {
-				client := openai.New(pCfg.Key, []string{m}, temperature, cfg.System)
+				client := openai.New(pCfg.Key, []string{m}, temperature, cfg.Prompts.System)
 				modelToProvider[m] = client
 			}
 		} else {
@@ -54,7 +54,7 @@ func build(cfg *config.Config) error {
 		if pCfg.Key != "" && pCfg.Key != "${ANTHROPIC_API_KEY}" {
 			temperature := cfg.GetEffectiveTemperature("anthropic")
 			for _, m := range pCfg.Models {
-				client := anthropic.New(pCfg.Key, []string{m}, temperature, cfg.System)
+				client := anthropic.New(pCfg.Key, []string{m}, temperature, cfg.Prompts.System)
 				modelToProvider[m] = client
 			}
 		} else {
@@ -66,7 +66,7 @@ func build(cfg *config.Config) error {
 	if pCfg, ok := cfg.Providers["gemini"]; ok {
 		if pCfg.Key != "" && pCfg.Key != "${GEMINI_API_KEY}" {
 			temperature := cfg.GetEffectiveTemperature("gemini")
-			client, err := gemini.New(pCfg.Key, pCfg.Models, temperature, cfg.System)
+			client, err := gemini.New(pCfg.Key, pCfg.Models, temperature, cfg.Prompts.System)
 			if err != nil {
 				initErrors = append(initErrors, fmt.Sprintf("Gemini: failed to create client: %v", err))
 			} else {
@@ -83,7 +83,7 @@ func build(cfg *config.Config) error {
 	if pCfg, ok := cfg.Providers["mistral"]; ok {
 		if pCfg.Key != "" && pCfg.Key != "${MISTRAL_API_KEY}" {
 			temperature := cfg.GetEffectiveTemperature("mistral")
-			client, err := mistral.New(pCfg.Key, pCfg.Models, temperature, cfg.System)
+			client, err := mistral.New(pCfg.Key, pCfg.Models, temperature, cfg.Prompts.System)
 			if err != nil {
 				initErrors = append(initErrors, fmt.Sprintf("Mistral: failed to create client: %v", err))
 			} else {
@@ -100,7 +100,7 @@ func build(cfg *config.Config) error {
 	if pCfg, ok := cfg.Providers["alibaba"]; ok {
 		if pCfg.Key != "" && pCfg.Key != "${ALIBABA_API_KEY}" {
 			temperature := cfg.GetEffectiveTemperature("alibaba")
-			client, err := alibaba.New(pCfg.Key, pCfg.Models, temperature, cfg.System)
+			client, err := alibaba.New(pCfg.Key, pCfg.Models, temperature, cfg.Prompts.System)
 			if err != nil {
 				initErrors = append(initErrors, fmt.Sprintf("Alibaba: failed to create client: %v", err))
 			} else {
